@@ -31,6 +31,7 @@ int main( int argc,char** argv)
 	int parameter = 5;
   	setMouseCallback("Original Frame",mousefunction,&parameter);
   	waitKey(0);
+  	destroyAllWindows();
   	
   	userparameter.resize(4);
 	vector<Point2f> finalparameter;			//vector for destination coordinates
@@ -39,17 +40,19 @@ int main( int argc,char** argv)
 	finalparameter.push_back(Point2f(800,830));
 	finalparameter.push_back(Point2f(800,52));
 	
-	Mat homo = findHomography(userparameter,finalparameter);
 	Mat homo_img;
-	warpPerspective(input_img,homo_img,homo,input_img.size()); 
+	Mat matrix = getPerspectiveTransform(userparameter,finalparameter);
+	warpPerspective(input_img,homo_img,matrix,input_img.size()); 	
 	imshow("Warped Source Image",homo_img);
 	waitKey(0);
+	destroyAllWindows();
 	
 	Mat final_img;
 	Rect crop_region(472,52,328,778);
 	final_img = homo_img(crop_region);
 	imshow("Final Image",final_img);
-	waitKey(0);	
+	waitKey(0);
+	destroyAllWindows();	
 	
 	return 0;
 }
