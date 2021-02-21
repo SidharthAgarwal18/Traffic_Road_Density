@@ -45,12 +45,30 @@ int main( int argc,char** argv)
 	warpPerspective(input_img,homo_img,matrix,input_img.size()); 	
 	imshow("Warped Source Image",homo_img);
 	waitKey(0);
+	
+	bool homo_success = imwrite("./wrapped_img.jpg",homo_img);
+	if(homo_success==false)
+	{
+		cout<<"Failed to save the image\n";
+		waitKey(0);
+		return -1;
+	}	
+	
 	destroyAllWindows();
 	
 	Mat final_img;
 	Rect crop_region(472,52,328,778);
 	final_img = homo_img(crop_region);
 	imshow("Final Image",final_img);
+	
+	bool final_success = imwrite("./final_crop_img.jpg",final_img);
+	if(final_success==false)
+	{
+		cout<<"Failed to save the cropped image\n";
+		waitKey(0);
+		return -1;
+	}
+	
 	waitKey(0);
 	destroyAllWindows();	
 	
