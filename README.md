@@ -9,3 +9,7 @@
 To run the program write the following commands on your terminal
 * `$ make` to compile anglecorrection.cpp to a binary myapp.o
 * Use `$ ./myapp.o img_name.extn` to view the img\_name.extn. Select 4 points and press `Esc` to view wrapped image. Press `Esc` again to view the cropped image.
+
+## Error Handling
+* Only your first 4 clicks will be considered for selection and thus avoid selecting more than 50 points.
+
