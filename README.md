@@ -7,10 +7,5 @@
 
 ## Instructions
 To run the program write the following commands on your terminal
-* `makefile` for compling anglecorrection.cpp to myapp
-* `make runempty` or `make runtraffic` to give empty.jpg or traffic.jpg respectively as input select points for homography 
-* press `esc` to view wrapped source image
-* press `esc` to view the cropped image
-* press `esc` to exit the program
-
-
+* `$ make` to compile anglecorrection.cpp to a binary myapp.o
+* Use `$ ./myapp.o img_name.extn` to view the img\_name.extn. Select 4 points and press `Esc` to view wrapped image. Press `Esc` again to view the cropped image.

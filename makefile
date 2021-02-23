@@ -1,10 +1,9 @@
-all:
-	g++ anglecorrection.cpp -o myapp -std=c++11 `pkg-config --cflags --libs opencv`
+myapp.o:
+	g++ anglecorrection.cpp -o myapp.o -std=c++11 `pkg-config --cflags --libs opencv`
 .PHONY clean:
-	rm myapp
-	rm traffic_*.jpg
-	rm empty_*.jpg
-runempty:
-	./myapp empty.jpg
+	rm *.o
+	rm *_*.jpg
+runempty:   #These were just for accebility while coding
+	./myapp.o empty.jpg
 runtraffic:
-	./myapp traffic.jpg
+	./myapp.o traffic.jpg

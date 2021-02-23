@@ -5,8 +5,8 @@
 using namespace cv;
 using namespace std;
 
-vector<Point2f> userparameter;
-void mousefunction(int event,int x,int y,int flags,void* parameters)
+vector<Point2f> userparameter;	// To store the points clicked by user
+void mousefunction(int event,int x,int y,int flags,void* parameters)	// To record every click
 {
 	if(event == EVENT_LBUTTONDOWN)
 		userparameter.push_back(Point2f(x,y));
@@ -14,27 +14,34 @@ void mousefunction(int event,int x,int y,int flags,void* parameters)
 
 int main( int argc,char** argv)
 {
-	if(argc==1){cout<<"No image selected";return -1;}
+	if(argc==1){cout<<"No image selected";return -1;}			
 	if(argc>2){cout<<"More than one image selected";return -1;}
-	string path(argv[1]);
+	string path(argv[1]);		//path variable to hold location of image
 	userparameter.resize(0);
-	if(path=="exit") return -1;
-	Mat input_img;
+	Mat input_img;		
 	input_img = imread(path);
 	if(!input_img.data)
 	{
 		cout<<"Image not found, you can download from https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/empty.jpg or https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/traffic.jpg or simply name path variable in code \n";
 		return -1;
 	}
-	namedWindow("Original Frame", WINDOW_AUTOSIZE);
 	imshow("Original Frame", input_img);
-	int parameter = 5;
+	int parameter = 50;// max number of mouse calls
   	setMouseCallback("Original Frame",mousefunction,&parameter);
   	waitKey(0);
-  	destroyAllWindows();
+  	destroyAllWindows();	//close the window
   	
   	string name = "./" + path.substr(0,path.length() - 4);	// for naming the image stored.
-  	
+
+  	if(userparameter.size()<4)
+  	{
+  		cout<<"Lesser points selected than expected.. Terminating";
+  		return -1;
+  	}
+  	if(userparameter.size()>4)
+  	{
+  		cout<<"More points selected than expected.. Taking first four points into account";
+  	}
   	userparameter.resize(4);
 	vector<Point2f> finalparameter;			//vector for destination coordinates
 	finalparameter.push_back(Point2f(472,52));
@@ -53,7 +60,6 @@ int main( int argc,char** argv)
 	if(homo_success==false)
 	{
 		cout<<"Failed to save the image\n";
-		return -1;
 	}	
 	
 	destroyAllWindows();
@@ -67,7 +73,6 @@ int main( int argc,char** argv)
 	if(final_success==false)
 	{
 		cout<<"Failed to save the cropped image\n";
-		return -1;
 	}
 	
 	waitKey(0);
