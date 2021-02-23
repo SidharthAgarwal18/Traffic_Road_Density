@@ -33,6 +33,8 @@ int main( int argc,char** argv)
   	waitKey(0);
   	destroyAllWindows();
   	
+  	string name = "./" + path.substr(0,path.length() - 4);	// for naming the image stored.
+  	
   	userparameter.resize(4);
 	vector<Point2f> finalparameter;			//vector for destination coordinates
 	finalparameter.push_back(Point2f(472,52));
@@ -43,14 +45,14 @@ int main( int argc,char** argv)
 	Mat homo_img;
 	Mat matrix = getPerspectiveTransform(userparameter,finalparameter);
 	warpPerspective(input_img,homo_img,matrix,input_img.size()); 	
-	imshow("Warped Source Image",homo_img);
+	imshow("Warpped Source Image",homo_img);
 	waitKey(0);
 	
-	bool homo_success = imwrite("./wrapped_img.jpg",homo_img);
+	
+	bool homo_success = imwrite(name+"_wrapped.jpg",homo_img);
 	if(homo_success==false)
 	{
 		cout<<"Failed to save the image\n";
-		waitKey(0);
 		return -1;
 	}	
 	
@@ -61,11 +63,10 @@ int main( int argc,char** argv)
 	final_img = homo_img(crop_region);
 	imshow("Final Image",final_img);
 	
-	bool final_success = imwrite("./final_crop_img.jpg",final_img);
+	bool final_success = imwrite(name+"_final.jpg",final_img);
 	if(final_success==false)
 	{
 		cout<<"Failed to save the cropped image\n";
-		waitKey(0);
 		return -1;
 	}
 	
