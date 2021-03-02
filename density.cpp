@@ -53,8 +53,6 @@ int main(int argc, char* argv[])
 	warpPerspective(background,back_homo,matrix,background.size()); 
 	Rect crop_region(472,52,328,778);					
 	back_final = back_homo(crop_region);
-	imshow("Final Image",back_final);
-	waitKey(0);
 	destroyAllWindows();		    
 	    
 	VideoCapture cap("./trafficvideo.mp4");
@@ -62,6 +60,7 @@ int main(int argc, char* argv[])
 	bool done = true;
 	int framenum = 0;
 	int queue_density = 0;
+	int previous_pixels = 0;
 	int dynamic_density = 0;
 	Scalar pixels;
 	
@@ -78,7 +77,9 @@ int main(int argc, char* argv[])
 	    	Mat img = abs(frame_final - back_final) > 50;
 	    	pixels = sum(img);
 	    	queue_density = (pixels[0]+pixels[1]+pixels[2])/30000;
-	    	
+	    	dynamic_density = abs((queue_density - previous_pixels)*100);
+	    	previous_pixels = queue_density;
+	    		    		    	
 	    	imshow("vid", img);
 		if (waitKey(10) == 27)
 		{
