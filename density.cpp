@@ -58,7 +58,14 @@ int main(int argc, char* argv[])
 	destroyAllWindows();		    
 	    
 	VideoCapture cap("./trafficvideo.mp4");
+	
 	bool done = true;
+	int framenum = 0;
+	int queue_density = 0;
+	int dynamic_density = 0;
+	Scalar pixels;
+	
+	cout<<"Framename\tQueue_density\tDyanmic_density";
 	while(done)
 	{
 		Mat frame,frame_homo,frame_final;
@@ -69,14 +76,18 @@ int main(int argc, char* argv[])
 	    	frame_final = frame_homo(crop_region);
 	    	    	
 	    	Mat img = abs(frame_final - back_final) > 50;
-	    	cout<<"a";
+	    	pixels = sum(img);
+	    	queue_density = (pixels[0]+pixels[1]+pixels[2])/30000;
+	    	
 	    	imshow("vid", img);
 		if (waitKey(10) == 27)
 		{
 			cout << "Esc key is pressed by user. Stopping the video" << endl;
 		   	break;
 		}
+		cout<<framenum/15<<"\t"<<queue_density<<"\t"<<dynamic_density<<endl;
+		framenum = framenum+1;
 	}
-	waitKey(0);
+	
 	return 0;
 }
