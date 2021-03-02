@@ -5,6 +5,7 @@
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/video.hpp>
+#include<fstream>
 using namespace cv;
 using namespace std;
 
@@ -64,7 +65,8 @@ int main(int argc, char* argv[])
 	int dynamic_density = 0;
 	Scalar pixels;
 	
-	cout<<"Sec\tQueue\tDyanmic";
+	ofstream myfile("./graph.csv");
+	myfile<<"Sec"<<','<<"Queue"<<','<<"Dyanmic"<<endl;
 	while(done)
 	{
 		Mat frame,frame_homo,frame_final;
@@ -80,9 +82,9 @@ int main(int argc, char* argv[])
 	    		
 	    	if(framenum%15==0)
 	    	{
-	    		dynamic_density = abs((queue_density - previous_pixels)*100);
+	    		dynamic_density = abs((queue_density - previous_pixels)*6);
 	    		previous_pixels = queue_density;
-	    		cout<<framenum/15<<"\t"<<queue_density<<"\t"<<dynamic_density<<endl;
+	    		myfile<<framenum/15<<','<<queue_density<<','<<dynamic_density<<endl;
 	    	}	
 	    	    		    		    	
 	    	imshow("vid", img);
@@ -94,6 +96,6 @@ int main(int argc, char* argv[])
 		
 		framenum = framenum+1;
 	}
-	
+	myfile.close();	
 	return 0;
 }
