@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 	int dynamic_density = 0;
 	Scalar pixels;
 	
-	cout<<"Framename\tQueue_density\tDyanmic_density";
+	cout<<"Sec\tQueue\tDyanmic";
 	while(done)
 	{
 		Mat frame,frame_homo,frame_final;
@@ -76,17 +76,22 @@ int main(int argc, char* argv[])
 	    	    	
 	    	Mat img = abs(frame_final - back_final) > 50;
 	    	pixels = sum(img);
-	    	queue_density = (pixels[0]+pixels[1]+pixels[2])/30000;
-	    	dynamic_density = abs((queue_density - previous_pixels)*100);
-	    	previous_pixels = queue_density;
-	    		    		    	
+	    	queue_density = (((pixels[0]+pixels[1]+pixels[2])/30000)*7 + queue_density*3)/10;
+	    		
+	    	if(framenum%15==0)
+	    	{
+	    		dynamic_density = abs((queue_density - previous_pixels)*100);
+	    		previous_pixels = queue_density;
+	    		cout<<framenum/15<<"\t"<<queue_density<<"\t"<<dynamic_density<<endl;
+	    	}	
+	    	    		    		    	
 	    	imshow("vid", img);
 		if (waitKey(10) == 27)
 		{
 			cout << "Esc key is pressed by user. Stopping the video" << endl;
 		   	break;
 		}
-		cout<<framenum/15<<"\t"<<queue_density<<"\t"<<dynamic_density<<endl;
+		
 		framenum = framenum+1;
 	}
 	
