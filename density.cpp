@@ -61,12 +61,17 @@ int main(int argc, char* argv[])
 	bool done = true;
 	int framenum = 0;
 	int queue_density = 0;
-	int previous_pixels = 0;
 	int dynamic_density = 0;
+	int avg_queue = 0;
+	int avg_dynamic = 0;
+	
 	Scalar pixels;
+	Scalar dynamic_pixels;
+	Mat previous_frame = back_final;
 	
 	ofstream myfile("./graph.csv");
 	myfile<<"Sec"<<','<<"Queue"<<','<<"Dyanmic"<<endl;
+	
 	while(done)
 	{
 		Mat frame,frame_homo,frame_final;
@@ -77,17 +82,28 @@ int main(int argc, char* argv[])
 	    	frame_final = frame_homo(crop_region);
 	    	    	
 	    	Mat img = abs(frame_final - back_final) > 50;
+	    	Mat dynamic_img = abs(frame_final - previous_frame)>50;
+	    	previous_frame = frame_final;
+	    	
 	    	pixels = sum(img);
-	    	queue_density = (((pixels[0]+pixels[1]+pixels[2])/30000)*7 + queue_density*3)/10;
+	    	dynamic_pixels = sum(dynamic_img);
+	    	
+	    	queue_density = ((pixels[0]+pixels[1]+pixels[2])/30000);
+	    	dynamic_density = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2])/6000;
+	    	
+	    	avg_queue = avg_queue + queue_density;
+	    	avg_dynamic = avg_dynamic + dynamic_density;
+	    	
 	    		
 	    	if(framenum%15==0)
 	    	{
-	    		dynamic_density = abs((queue_density - previous_pixels)*6);
-	    		previous_pixels = queue_density;
-	    		myfile<<framenum/15<<','<<queue_density<<','<<dynamic_density<<endl;
+	    		myfile<<framenum/15<<','<<avg_queue/15<<','<<avg_dynamic/15<<endl;
+	    		avg_queue = 0;
+	    		avg_dynamic = 0;
 	    	}	
 	    	    		    		    	
 	    	imshow("vid", img);
+	    	imshow("vid_dynamic", dynamic_img);
 		if (waitKey(10) == 27)
 		{
 			cout << "Esc key is pressed by user. Stopping the video" << endl;
