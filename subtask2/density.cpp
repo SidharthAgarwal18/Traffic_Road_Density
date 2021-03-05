@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 	background = imread("./empty.jpg");
 	if(!background.data)
 	{
-		cout<<"Image not found, you can download from https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/empty.jpg or https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/traffic.jpg or simply name path variable in code \n";
+		cout<<"Image not found, you can download from https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/empty.jpg or simply name path variable in code \n";
 		return -1;
 	}
 	
@@ -57,6 +57,11 @@ int main(int argc, char* argv[])
 	destroyAllWindows();		    
 	    
 	VideoCapture cap("./trafficvideo.mp4");
+	if (cap.isOpened() == false)  
+	 {
+	  cout << "Video file not found, you can download it from https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/trafficvideo.mp4 or simply name path variable in code" << endl;
+	  return -1;
+	 }
 	
 	bool done = true;
 	float framenum = 0;					// 15framenums = 1second
@@ -91,10 +96,10 @@ int main(int argc, char* argv[])
 	    	queue_density = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
 	    	dynamic_density = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
 	    	
-		cout<<framenum/15<<fixed<<','<<queue_density/5<<','<<dynamic_density<<endl;	
+		cout<<framenum/15<<fixed<<','<<queue_density/(1.25e6)<<','<<dynamic_density/(2.5e5)<<endl;	
 	    	//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  		    		    	
-	    	imshow("vid", img);
-	    	imshow("vid_dynamic", dynamic_img);
+	    	imshow("video_queue", img);
+	    	imshow("video_dynamic", dynamic_img);
 		if (waitKey(10) == 27)
 		{
 			cout << "Esc key is pressed by user. Stopping the video" << endl;
@@ -103,6 +108,6 @@ int main(int argc, char* argv[])
 		
 		framenum = framenum+1;
 	}
-	myfile.close();	
+	//myfile.close();	
 	return 0;
 }

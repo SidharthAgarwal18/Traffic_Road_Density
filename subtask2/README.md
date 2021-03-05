@@ -7,10 +7,9 @@
 ## Instructions
 To run the program write the following commands on your terminal
 * `$ make` to compile density.cpp to a binary a.o
+* `$ ./a.o` to run the program.
 * Select `4` points and press `Esc` to see the data for queue and dynamic density being computed. Press `Esc` again to terminate the process before completion.
 * After the video has finished press `Esc` to finish the program.
 
 ## Error Handling
 * Only your first 4 clicks will be considered for selection and thus avoid selecting more than 50 points.
-* 
-
