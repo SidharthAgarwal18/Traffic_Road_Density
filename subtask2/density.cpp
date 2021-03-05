@@ -59,15 +59,15 @@ int main(int argc, char* argv[])
 	VideoCapture cap("./trafficvideo.mp4");
 	
 	bool done = true;
-	float framenum = 0;
+	float framenum = 0;					// 15framenums = 1second
 	float queue_density = 0;
 	float dynamic_density = 0;
 	//int avg_queue = 0;
 	//int avg_dynamic = 0;
 	
-	Scalar pixels;
-	Scalar dynamic_pixels;
-	Mat previous_frame = back_final;
+	Scalar pixels;						//sum of pixels in subtracted image for queue_density
+	Scalar dynamic_pixels;					// sum of pixels in subtracted image for dynamic_density
+	Mat previous_frame = back_final;			//stores img of previous frame.
 	
 	//ofstream myfile("./out.txt");			To save csv in out.txt
 	cout<<"Sec,Queue,Dynamic"<<endl;
@@ -76,14 +76,14 @@ int main(int argc, char* argv[])
 	{
 		Mat frame,frame_homo,frame_final;
 	    	done = cap.read(frame);
-	    	if(!done) break;
+	    	if(!done) break;					//video is finished.
 	    	
 	    	warpPerspective(frame,frame_homo,matrix,frame.size());
-	    	frame_final = frame_homo(crop_region);
+	    	frame_final = frame_homo(crop_region);			//frame after wrapping and cropping
 	    	    	
-	    	Mat img = abs(frame_final - back_final) > 50;		//Substract background and consider part with diff grater than 50
-	    	Mat dynamic_img = abs(frame_final - previous_frame)>50;//Substract previous frame and consider part with diff greaer than 50
-	    	previous_frame = frame_final;							//Set current frame to be previous for next frame
+	    	Mat img = abs(frame_final - back_final) > 50;		//Subtract background and consider part with diff grater than 50
+	    	Mat dynamic_img = abs(frame_final - previous_frame)>50;//Subtract previous frame and consider part with diff greaer than 50
+	    	previous_frame = frame_final;					//Set current frame to be previous for next frame
 	    	
 	    	pixels = sum(img);
 	    	dynamic_pixels = sum(dynamic_img);
@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
 	    	queue_density = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
 	    	dynamic_density = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
 	    	
-			cout<<framenum/15<<fixed<<','<<queue_density/5<<','<<dynamic_density<<endl;	
+		cout<<framenum/15<<fixed<<','<<queue_density/5<<','<<dynamic_density<<endl;	
 	    	//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  		    		    	
 	    	imshow("vid", img);
 	    	imshow("vid_dynamic", dynamic_img);
