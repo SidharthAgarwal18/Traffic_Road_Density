@@ -59,18 +59,18 @@ int main(int argc, char* argv[])
 	VideoCapture cap("./trafficvideo.mp4");
 	
 	bool done = true;
-	int framenum = 0;
-	int queue_density = 0;
-	int dynamic_density = 0;
-	int avg_queue = 0;
-	int avg_dynamic = 0;
+	float framenum = 0;
+	float queue_density = 0;
+	float dynamic_density = 0;
+	//int avg_queue = 0;
+	//int avg_dynamic = 0;
 	
 	Scalar pixels;
 	Scalar dynamic_pixels;
 	Mat previous_frame = back_final;
 	
-	ofstream myfile("./graph.csv");
-	myfile<<"Sec"<<','<<"Queue"<<','<<"Dyanmic"<<endl;
+	ofstream myfile("./out.txt");
+	myfile<<"Sec"<<','<<"Queue,Dynamic"<<endl;
 	
 	while(done)
 	{
@@ -88,20 +88,11 @@ int main(int argc, char* argv[])
 	    	pixels = sum(img);
 	    	dynamic_pixels = sum(dynamic_img);
 	    	
-	    	queue_density = ((pixels[0]+pixels[1]+pixels[2])/30000);
-	    	dynamic_density = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2])/6000;
+	    	queue_density = ((pixels[0]+pixels[1]+pixels[2]));
+	    	dynamic_density = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);
 	    	
-	    	avg_queue = avg_queue + queue_density;
-	    	avg_dynamic = avg_dynamic + dynamic_density;
-	    	
-	    		
-	    	if(framenum%15==0)
-	    	{
-	    		myfile<<framenum/15<<','<<avg_queue/15<<','<<avg_dynamic/15<<endl;
-	    		avg_queue = 0;
-	    		avg_dynamic = 0;
-	    	}	
-	    	    		    		    	
+			myfile<<framenum/15<<fixed<<','<<queue_density/5<<','<<dynamic_density<<endl;	
+	    	if(framenum == 5175) imwrite("empty.jpg",frame);    		    		    	
 	    	imshow("vid", img);
 	    	imshow("vid_dynamic", dynamic_img);
 		if (waitKey(10) == 27)
