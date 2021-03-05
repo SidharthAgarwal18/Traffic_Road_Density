@@ -69,8 +69,8 @@ int main(int argc, char* argv[])
 	Scalar dynamic_pixels;
 	Mat previous_frame = back_final;
 	
-	ofstream myfile("./out.txt");
-	myfile<<"Sec"<<','<<"Queue,Dynamic"<<endl;
+	//ofstream myfile("./out.txt");			To save csv in out.txt
+	cout<<"Sec,Queue,Dynamic"<<endl;
 	
 	while(done)
 	{
@@ -81,18 +81,18 @@ int main(int argc, char* argv[])
 	    	warpPerspective(frame,frame_homo,matrix,frame.size());
 	    	frame_final = frame_homo(crop_region);
 	    	    	
-	    	Mat img = abs(frame_final - back_final) > 50;
-	    	Mat dynamic_img = abs(frame_final - previous_frame)>50;
-	    	previous_frame = frame_final;
+	    	Mat img = abs(frame_final - back_final) > 50;		//Substract background and consider part with diff grater than 50
+	    	Mat dynamic_img = abs(frame_final - previous_frame)>50;//Substract previous frame and consider part with diff greaer than 50
+	    	previous_frame = frame_final;							//Set current frame to be previous for next frame
 	    	
 	    	pixels = sum(img);
 	    	dynamic_pixels = sum(dynamic_img);
 	    	
-	    	queue_density = ((pixels[0]+pixels[1]+pixels[2]));
-	    	dynamic_density = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);
+	    	queue_density = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
+	    	dynamic_density = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
 	    	
-			myfile<<framenum/15<<fixed<<','<<queue_density/5<<','<<dynamic_density<<endl;	
-	    	if(framenum == 5175) imwrite("empty.jpg",frame);    		    		    	
+			cout<<framenum/15<<fixed<<','<<queue_density/5<<','<<dynamic_density<<endl;	
+	    	//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  		    		    	
 	    	imshow("vid", img);
 	    	imshow("vid_dynamic", dynamic_img);
 		if (waitKey(10) == 27)
