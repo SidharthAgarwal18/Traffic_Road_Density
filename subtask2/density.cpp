@@ -67,6 +67,7 @@ int main(int argc, char* argv[])
 	float framenum = 0;					// 15framenums = 1second
 	float queue_density = 0;
 	float dynamic_density = 0;
+	float previous_dynamic = 0;
 	//int avg_queue = 0;
 	//int avg_dynamic = 0;
 	
@@ -74,7 +75,7 @@ int main(int argc, char* argv[])
 	Scalar dynamic_pixels;					// sum of pixels in subtracted image for dynamic_density
 	Mat previous_frame = back_final;			//stores img of previous frame.
 	
-	//ofstream myfile("./out.txt");			To save csv in out.txt
+	//freopen("out.txt", "w", stdout);		//To save csv in out.txt
 	cout<<"Sec,Queue,Dynamic"<<endl;
 	
 	while(done)
@@ -95,8 +96,10 @@ int main(int argc, char* argv[])
 	    	
 	    	queue_density = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
 	    	dynamic_density = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
-	    	
-		cout<<framenum/15<<fixed<<','<<queue_density/(1.25e6)<<','<<dynamic_density/(2.5e5)<<endl;	
+	    	dynamic_density = 0.2*dynamic_density + 0.8*previous_dynamic;
+			previous_dynamic = dynamic_density;
+
+			cout<<framenum/15<<fixed<<','<<queue_density/(1.25e6)<<','<<dynamic_density/(2.5e5)<<endl;	
 	    	//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  		    		    	
 	    	imshow("video_queue", img);
 	    	imshow("video_dynamic", dynamic_img);
