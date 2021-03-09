@@ -3,4 +3,4 @@ a.o: density.cpp
 .PHONY: clean
 clean:
 	rm -f *.o
-	rm -f out.txt
+#	rm -f out.txt

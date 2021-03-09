@@ -7,7 +7,7 @@
 ## Instructions
 To run the program write the following commands on your terminal
 * `$ make` to compile density.cpp to a binary a.o
-* `$ ./a.o` to run the program.
+* `$ ./a.o empty_img.extn vide.extn` to run the program.
 * Select `4` points and press `Esc` to see the data for queue and dynamic density being computed. Press `Esc` again to terminate the process before completion.
 * After the video has finished press `Esc` to finish the program.
 
