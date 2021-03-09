@@ -18,8 +18,15 @@ void mousefunction(int event,int x,int y,int flags,void* parameters)		// To reco
 
 int main(int argc, char* argv[])
 {
+	if(argc != 3)
+	{
+		cout<<"Expected 2 variables 1st one path of empty image and second the path of video. Empty image submitted was taken from 5:45 from given video";
+		return -1;
+	}
+	string empty(argv[1]);
+	string video(argv[2]);
 	Mat background;		
-	background = imread("./empty.jpg");
+	background = imread(empty);
 	if(!background.data)
 	{
 		cout<<"Image not found, you can download from https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/empty.jpg or simply name path variable in code \n";
@@ -56,7 +63,7 @@ int main(int argc, char* argv[])
 	back_final = back_homo(crop_region);
 	destroyAllWindows();		    
 	    
-	VideoCapture cap("./trafficvideo.mp4");
+	VideoCapture cap(video);
 	if (cap.isOpened() == false)  
 	 {
 	  cout << "Video file not found, you can download it from https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/trafficvideo.mp4 or simply name path variable in code" << endl;
