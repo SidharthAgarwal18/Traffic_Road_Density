@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
 	    	
 	    	queue_density = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
 	    	dynamic_density = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
-	    	dynamic_density = 0.2*dynamic_density + 0.8*previous_dynamic;
+	    	//dynamic_density = 0.2*dynamic_density + 0.8*previous_dynamic;
 			previous_dynamic = dynamic_density;
 
 			cout<<framenum/15<<fixed<<','<<queue_density/(1.25e6)<<','<<dynamic_density/(2.5e5)<<endl;	
