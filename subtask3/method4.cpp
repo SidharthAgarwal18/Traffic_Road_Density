@@ -7,6 +7,7 @@
 #include <opencv2/video.hpp>
 #include<fstream>
 #include<pthread.h>
+#include<unistd.h>
 using namespace cv;
 using namespace std;
 using namespace std::chrono;
@@ -38,7 +39,7 @@ void* consecutive(void* arg)
 	String video = n.video;
 	Mat back_final = n.back_final;
 	Mat matrix = n.matrix;
-
+	//sleep(index);
 	VideoCapture cap(video);
 	if (cap.isOpened() == false)  
 	{
@@ -88,7 +89,7 @@ void* consecutive(void* arg)
 
 		if (waitKey(10) == 27 || esc == 1 || framenum==325)		//for testing purposes break at 100 seconds
 		{
-			cout << "Esc key is pressed by user. Stopping the video" << endl;
+			cout << "Esc key is pressed by user. Stopping the video"<<framenum << endl;
 		   	esc = 1;
 		   	return NULL;
 		}
@@ -151,17 +152,17 @@ int main(int argc, char* argv[])
 	auto start = high_resolution_clock::now();
 
 	pthread_t ptid[total-1];
+	forparallel n[total-1];
 	for(int i=0;i<total-1;i++)
 	{
-		forparallel n;
-		n.index = i;
-		n.video = video;
-		n.back_final = back_final;
-		n.matrix = matrix;
-		pthread_create(&(ptid[i]), NULL, &consecutive, &n);
+		n[i].index = i;
+		n[i].video = video;
+		n[i].back_final = back_final;
+		n[i].matrix = matrix;
+		pthread_create(&(ptid[i]), NULL, &consecutive, &(n[i]));
 	}
 
-	for(int i=0;i<7;i++)
+	for(int i=0;i<total-1;i++)
 	{
 		pthread_join((ptid[i]),NULL);
 	}
