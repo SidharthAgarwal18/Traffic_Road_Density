@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 	Scalar dynamic_pixels;					// sum of pixels in subtracted image for dynamic_density
 	Mat previous_frame = back_final;			//stores img of previous frame.
 	
-	//freopen("out.txt", "w", stdout);		//To save csv in out.txt
+	freopen("out1.txt", "w", stdout);		//To save csv in out.txt
 	cout<<"Sec,Queue,Dynamic"<<endl;
 	auto start = high_resolution_clock::now();
 
@@ -112,18 +112,19 @@ int main(int argc, char* argv[])
 		//imshow("video_queue", img);
 		//imshow("video_dynamic", dynamic_img);
 		cout<<((float)framenum)/15<<fixed<<','<<queue_density/(1.25e6)<<','<<dynamic_density/(2.5e5)<<endl;
-		if (waitKey(10) == 27 || framenum==325)		//for testing purposes break at 100 seconds
+		if (waitKey(10) == 27)		//for testing purposes break at 100 seconds
 		{
 			cout << "Esc key is pressed by user. Stopping the video" << endl;
 		   	break;
 		}
+		if(framenum==325) break;
 		
 		framenum = framenum+1;
 	}
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
-	cout << "\nTime taken by function: "
-		 << duration.count()/(1e6) << " seconds" << endl;
+	cout << "Time taken by function in seconds: \n"
+		 << duration.count()/(1e6) << endl;
 	//myfile.close();	
 	return 0;
 }
