@@ -12,32 +12,72 @@ using namespace std;
 using namespace std::chrono;
 
 vector<Point2f> userparameter;							// To store the points clicked by user
-float queue_density = 0;
-float dynamic_density = 0;
-Mat queue_img;
-Mat dynamic_img;
-
 void mousefunction(int event,int x,int y,int flags,void* parameters)		// To record every left click
 {
 	if(event == EVENT_LBUTTONDOWN)	
 		userparameter.push_back(Point2f(x,y));
 }
 
-void queue_function(Mat frame_final,Mat back_final,Scalar pixels,int threshhold)
+void consecutive(string video,VideoCapture cap[],int index,int total,float queue_density[],float dynamic_density[],Mat back_final,Mat matrix)
 {
-	queue_img = (abs(frame_final - back_final) > threshhold);
-	pixels = sum(queue_img);
-	queue_density = ((pixels[0]+pixels[1]+pixels[2]));
+	cap[index].open(video);
+	if (cap[index].isOpened() == false)  
+	{
+		cout << "Video file not found, you can download it from https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/trafficvideo.mp4 or simply name path variable in code" << endl;
+		return ;
+	}
+	Rect crop_region(472,52,328,778);
+
+	bool done = true;
+	int framenum = 0;					
+		
+	Scalar pixels;						//sum of pixels in subtracted image for queue_density
+	Scalar dynamic_pixels;					// sum of pixels in subtracted image for dynamic_density
+	Mat previous_frame = back_final;			//stores img of previous frame.
+		
+	while(done)
+	{
+		Mat frame,frame_homo,frame_final;
+	    done = cap[index].read(frame);
+	    if(!done) break;					//video is finished.
+	    
+	    if(framenum%total==index-1)
+	    {
+	    	warpPerspective(frame,frame_homo,matrix,frame.size());
+	    	frame_final = frame_homo(crop_region);			//frame after wrapping and cropping
+	    	previous_frame = frame_final;
+	    }
+	    else if(framenum%total==index)
+	    {	
+	    	warpPerspective(frame,frame_homo,matrix,frame.size());
+	    	frame_final = frame_homo(crop_region);			//frame after wrapping and cropping
+	    	    	
+	    	Mat img = abs(frame_final - back_final) > 50;		//Subtract background and consider part with diff grater than 50
+	    	Mat dynamic_img = abs(frame_final - previous_frame)>50;//Subtract previous frame and consider part with diff greaer than 50
+	    	//previous_frame = frame_final;					//Set current frame to be previous for next frame
+	    	
+	    	pixels = sum(img);
+	    	dynamic_pixels = sum(dynamic_img);
+	    	
+	    	queue_density[framenum] = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
+	    	dynamic_density[framenum] = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
+	    	
+			//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  		    		    	
+	    	//imshow("video_queue", img);
+	    	//imshow("video_dynamic", dynamic_img);
+	    }
+
+		if (waitKey(10) == 27 || framenum==325)		//for testing purposes break at 100 seconds
+		{
+			cout << "Esc key is pressed by user. Stopping the video" << endl;
+		   	break;
+		}
+		
+		framenum = framenum+1;
+	}
 }
 
-void dynamic_function(Mat frame_final,Mat previous_frame,Scalar dynamic_pixels,int threshhold)
-{
-	dynamic_img = abs(frame_final - previous_frame)>threshhold;
-	dynamic_pixels = sum(dynamic_img);
 
-	int new_density = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
-	dynamic_density = 0.2*new_density + 0.8*dynamic_density;
-}
 
 int main(int argc, char* argv[])
 {
@@ -86,52 +126,33 @@ int main(int argc, char* argv[])
 	back_final = back_homo(crop_region);
 	destroyAllWindows();		    
 	    
-	VideoCapture cap(video);
-	if (cap.isOpened() == false)  
-	 {
-	  cout << "Video file not found, you can download it from https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/trafficvideo.mp4 or simply name path variable in code" << endl;
-	  return -1;
-	 }
-	
-	bool done = true;
-	float framenum = 0;					// 15framenums = 1second
-		
-	Scalar pixels;						//sum of pixels in subtracted image for queue_density
-	Scalar dynamic_pixels;					// sum of pixels in subtracted image for dynamic_density
-	Mat previous_frame = back_final;			//stores img of previous frame.
-	
-	//freopen("out.txt", "w", stdout);		//To save csv in out.txt
-	cout<<"Sec,Queue,Dynamic"<<endl;
+	int total = 4;
+	//std::thread mythreads[total];
+	VideoCapture cap[total];
+	float queue_density[6000];
+	float dynamic_density[6000];
+
 	auto start = high_resolution_clock::now();
+	std::thread mythread1(consecutive,video,cap,0,total,queue_density,dynamic_density,back_final,matrix);
+	std::thread mythread2(consecutive,video,cap,1,total,queue_density,dynamic_density,back_final,matrix);
+	std::thread mythread3(consecutive,video,cap,2,total,queue_density,dynamic_density,back_final,matrix);
+	std::thread mythread4(consecutive,video,cap,3,total,queue_density,dynamic_density,back_final,matrix);
 
-	while(done)
+	if(mythread1.joinable()) mythread1.join();
+	if(mythread2.joinable()) mythread2.join();
+	if(mythread3.joinable()) mythread3.join();
+	if(mythread4.joinable()) mythread4.join();
+	
+
+	cout<<"Sec,Queue,Dynamic"<<endl;
+	int framenum = 0;
+	while(framenum<325)
 	{
-		Mat frame,frame_homo,frame_final;
-	    	done = cap.read(frame);
-	    	if(!done) break;					//video is finished.
-	    	
-	    	warpPerspective(frame,frame_homo,matrix,frame.size());
-	    	frame_final = frame_homo(crop_region);			//frame after wrapping and cropping
-	    	 
-	    	std::thread queue_thread(queue_function,frame_final,back_final,pixels,50);
-	    	std::thread dynamic_thread(dynamic_function,frame_final,previous_frame,dynamic_pixels,50); 	
-	    	
-	    	if (queue_thread.joinable()) queue_thread.join();
-	    	if (dynamic_thread.joinable()) dynamic_thread.join();
-
-	    	cout<<framenum/15<<fixed<<','<<queue_density/(1.25e6)<<','<<dynamic_density/(2.5e5)<<endl;	
-	    	previous_frame = frame_final;
-	    	//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  		    		    	
-	    	imshow("video_queue", queue_img);
-	    	imshow("video_dynamic", dynamic_img);
-		if (waitKey(10) == 27 || framenum==325)			//for testing purposes break at 100 seconds
-		{
-			cout << "Esc key is pressed by user. Stopping the video" << endl;
-		   	break;
-		}
-		
-		framenum = framenum+1;
+		cout<<float(framenum/15)<<fixed<<','<<queue_density[framenum]/(1.25e6)<<','<<dynamic_density[framenum]/(2.5e5)<<endl;
+		framenum++;
 	}
+	
+	
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
 	cout << "\nTime taken by function: "
