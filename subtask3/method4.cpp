@@ -6,7 +6,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/video.hpp>
 #include<fstream>
-#include<thread>
+#include<pthread.h>
 using namespace cv;
 using namespace std;
 using namespace std::chrono;
@@ -17,14 +17,33 @@ void mousefunction(int event,int x,int y,int flags,void* parameters)		// To reco
 	if(event == EVENT_LBUTTONDOWN)	
 		userparameter.push_back(Point2f(x,y));
 }
+int total;
+float queue_density[6000][17];
+float dynamic_density[6000][17];
+int esc = 0;
 
-void consecutive(string video,VideoCapture cap[],int index,int total,float queue_density[],float dynamic_density[],Mat back_final,Mat matrix)
+class forparallel
 {
-	cap[index].open(video);
-	if (cap[index].isOpened() == false)  
+public:
+	string video;
+	int index;
+	Mat back_final;
+	Mat matrix;
+};
+
+void* consecutive(void* arg)
+{
+	forparallel n = *((forparallel*)arg);
+	int index = n.index;
+	String video = n.video;
+	Mat back_final = n.back_final;
+	Mat matrix = n.matrix;
+
+	VideoCapture cap(video);
+	if (cap.isOpened() == false)  
 	{
 		cout << "Video file not found, you can download it from https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/trafficvideo.mp4 or simply name path variable in code" << endl;
-		return ;
+		return NULL;
 	}
 	Rect crop_region(472,52,328,778);
 
@@ -38,7 +57,7 @@ void consecutive(string video,VideoCapture cap[],int index,int total,float queue
 	while(done)
 	{
 		Mat frame,frame_homo,frame_final;
-	    done = cap[index].read(frame);
+	    done = cap.read(frame);
 	    if(!done) break;					//video is finished.
 	    
 	    if(framenum%total==index-1)
@@ -59,35 +78,38 @@ void consecutive(string video,VideoCapture cap[],int index,int total,float queue
 	    	pixels = sum(img);
 	    	dynamic_pixels = sum(dynamic_img);
 	    	
-	    	queue_density[framenum] = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
-	    	dynamic_density[framenum] = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
+	    	queue_density[framenum][index] = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
+	    	dynamic_density[framenum][index] = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
 	    	
 			//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  		    		    	
 	    	//imshow("video_queue", img);
 	    	//imshow("video_dynamic", dynamic_img);
 	    }
 
-		if (waitKey(10) == 27 || framenum==325)		//for testing purposes break at 100 seconds
+		if (waitKey(10) == 27 || esc == 1 || framenum==325)		//for testing purposes break at 100 seconds
 		{
 			cout << "Esc key is pressed by user. Stopping the video" << endl;
-		   	break;
+		   	esc = 1;
+		   	return NULL;
 		}
 		
 		framenum = framenum+1;
 	}
+	return NULL;
 }
 
 
 
 int main(int argc, char* argv[])
 {
-	if(argc != 3)
+	if(argc != 4)
 	{
-		cout<<"Expected 2 variables 1st one path of empty image and second the path of video. Empty image submitted was taken from 5:45 from given video";
+		cout<<"Expected 2 variables 1st one path of empty image and second the path of video, and third for number of threads to split into.. Empty image submitted was taken from 5:45 from given video";
 		return -1;
 	}
 	string empty(argv[1]);
 	string video(argv[2]);
+	total = atoi(argv[3]);
 	Mat background;		
 	background = imread(empty);
 	if(!background.data)
@@ -125,30 +147,31 @@ int main(int argc, char* argv[])
 	Rect crop_region(472,52,328,778);					
 	back_final = back_homo(crop_region);
 	destroyAllWindows();		    
-	    
-	int total = 4;
-	//std::thread mythreads[total];
-	VideoCapture cap[total];
-	float queue_density[6000];
-	float dynamic_density[6000];
 
 	auto start = high_resolution_clock::now();
-	std::thread mythread1(consecutive,video,cap,0,total,queue_density,dynamic_density,back_final,matrix);
-	std::thread mythread2(consecutive,video,cap,1,total,queue_density,dynamic_density,back_final,matrix);
-	std::thread mythread3(consecutive,video,cap,2,total,queue_density,dynamic_density,back_final,matrix);
-	std::thread mythread4(consecutive,video,cap,3,total,queue_density,dynamic_density,back_final,matrix);
 
-	if(mythread1.joinable()) mythread1.join();
-	if(mythread2.joinable()) mythread2.join();
-	if(mythread3.joinable()) mythread3.join();
-	if(mythread4.joinable()) mythread4.join();
+	pthread_t ptid[total-1];
+	for(int i=0;i<total-1;i++)
+	{
+		forparallel n;
+		n.index = i;
+		n.video = video;
+		n.back_final = back_final;
+		n.matrix = matrix;
+		pthread_create(&(ptid[i]), NULL, &consecutive, &n);
+	}
+
+	for(int i=0;i<7;i++)
+	{
+		pthread_join((ptid[i]),NULL);
+	}
 	
 
 	cout<<"Sec,Queue,Dynamic"<<endl;
 	int framenum = 0;
 	while(framenum<325)
 	{
-		cout<<float(framenum/15)<<fixed<<','<<queue_density[framenum]/(1.25e6)<<','<<dynamic_density[framenum]/(2.5e5)<<endl;
+		//cout<<float(framenum/15)<<fixed<<','<<queue_density[framenum]/(1.25e6)<<','<<dynamic_density[framenum]/(2.5e5)<<endl;
 		framenum++;
 	}
 	
