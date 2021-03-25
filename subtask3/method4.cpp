@@ -19,8 +19,8 @@ void mousefunction(int event,int x,int y,int flags,void* parameters)		// To reco
 		userparameter.push_back(Point2f(x,y));
 }
 int total;
-float queue_density[6000][17];
-float dynamic_density[6000][17];
+float queue_density[6000];
+float dynamic_density[6000];
 int esc = 0;
 
 class forparallel
@@ -79,8 +79,8 @@ void* consecutive(void* arg)
 	    	pixels = sum(img);
 	    	dynamic_pixels = sum(dynamic_img);
 	    	
-	    	queue_density[framenum][index] = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
-	    	dynamic_density[framenum][index] = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
+	    	queue_density[framenum] = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
+	    	dynamic_density[framenum] = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
 	    	
 			//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  		    		    	
 	    	//imshow("video_queue", img);
@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
 	int framenum = 0;
 	while(framenum<325)
 	{
-		//cout<<float(framenum/15)<<fixed<<','<<queue_density[framenum]/(1.25e6)<<','<<dynamic_density[framenum]/(2.5e5)<<endl;
+		cout<<float(framenum/15)<<fixed<<','<<queue_density[framenum]/(1.25e6)<<','<<dynamic_density[framenum]/(2.5e5)<<endl;
 		framenum++;
 	}
 	
