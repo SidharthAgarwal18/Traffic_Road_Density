@@ -19,8 +19,8 @@ void mousefunction(int event,int x,int y,int flags,void* parameters)		// To reco
 		userparameter.push_back(Point2f(x,y));
 }
 int total;
-float queue_density[6000];
-float dynamic_density[6000];
+float queue_density[6000][17];
+float dynamic_density[6000][17];
 int esc = 0;
 
 class forparallel
@@ -28,7 +28,7 @@ class forparallel
 public:
 	string video;
 	int index;
-	Mat back_final;
+	Mat back_homo;
 	Mat matrix;
 };
 
@@ -37,8 +37,10 @@ void* consecutive(void* arg)
 	forparallel n = *((forparallel*)arg);
 	int index = n.index;
 	String video = n.video;
-	Mat back_final = n.back_final;
+	Mat back_homo = n.back_homo;
 	Mat matrix = n.matrix;
+	Rect crop_region(472,52+(index*(778/total)),328,(778/total));
+	Mat back_final = back_homo(crop_region);
 	//sleep(index);
 	VideoCapture cap(video);
 	if (cap.isOpened() == false)  
@@ -46,8 +48,6 @@ void* consecutive(void* arg)
 		cout << "Video file not found, you can download it from https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/trafficvideo.mp4 or simply name path variable in code" << endl;
 		return NULL;
 	}
-	Rect crop_region(472,52,328,778);
-
 	bool done = true;
 	int framenum = 0;					
 		
@@ -58,39 +58,27 @@ void* consecutive(void* arg)
 	while(done)
 	{
 		Mat frame,frame_homo,frame_final;
-	    done = cap.read(frame);
-	    if(!done) break;					//video is finished.
-	    
-	    if(framenum%total==index-1)
-	    {
-	    	warpPerspective(frame,frame_homo,matrix,frame.size());
-	    	frame_final = frame_homo(crop_region);			//frame after wrapping and cropping
-	    	previous_frame = frame_final;
-	    }
-	    else if(framenum%total==index)
-	    {	
-	    	warpPerspective(frame,frame_homo,matrix,frame.size());
-	    	frame_final = frame_homo(crop_region);			//frame after wrapping and cropping
-	    	    	
-	    	Mat img = abs(frame_final - back_final) > 50;		//Subtract background and consider part with diff grater than 50
-	    	Mat dynamic_img = abs(frame_final - previous_frame)>50;//Subtract previous frame and consider part with diff greaer than 50
-	    	//previous_frame = frame_final;					//Set current frame to be previous for next frame
-	    	
-	    	pixels = sum(img);
-	    	dynamic_pixels = sum(dynamic_img);
-	    	
-	    	queue_density[framenum] = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
-	    	dynamic_density[framenum] = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
-	    	
-			//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  		    		    	
-	    	//imshow("video_queue", img);
-	    	//imshow("video_dynamic", dynamic_img);
-	    }
-	    if(framenum >=325)
-	    {
-	    	return NULL;
-	    }
-		if (waitKey(10) == 27 || esc == 1)		//for testing purposes break at 100 seconds
+		done = cap.read(frame);
+		if(!done) break;					//video is finished.
+	
+		warpPerspective(frame,frame_homo,matrix,frame.size());
+		frame_final = frame_homo(crop_region);			//frame after wrapping and cropping
+			
+		Mat img = abs(frame_final - back_final) > 50;		//Subtract background and consider part with diff grater than 50
+		Mat dynamic_img = abs(frame_final - previous_frame)>50;//Subtract previous frame and consider part with diff greaer than 50
+		//previous_frame = frame_final;					//Set current frame to be previous for next frame
+		
+		pixels = sum(img);
+		dynamic_pixels = sum(dynamic_img);
+		
+		queue_density[framenum][index] = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
+		dynamic_density[framenum][index] = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
+		
+			//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  					
+		//imshow("video_queue", img);
+		//imshow("video_dynamic", dynamic_img);
+
+		if (waitKey(10) == 27 || esc == 1 || framenum==325)		//for testing purposes break at 100 seconds
 		{
 			cout << "Esc key is pressed by user. Stopping the video"<<framenum << endl;
 		   	esc = 1;
@@ -114,6 +102,10 @@ int main(int argc, char* argv[])
 	string empty(argv[1]);
 	string video(argv[2]);
 	total = atoi(argv[3]);
+	if(total > 16)
+	{
+		cout << "Currently support max of 16 threads.. Number of threads that can be processed can be increased(significantly) by using locking mechanisms, but it may slow down by bit";
+	}
 	Mat background;		
 	background = imread(empty);
 	if(!background.data)
@@ -126,14 +118,14 @@ int main(int argc, char* argv[])
 	int parameter = 50;							// max number of mouse calls
   	setMouseCallback("Original Frame",mousefunction,&parameter);
   	waitKey(0);								// press any key to proceed
-  	destroyAllWindows();							// destroyes all opened windows    
+  	destroyAllWindows();							// destroyes all opened windows
   	
   	if(userparameter.size()<4)						// ensures 4 points are considered
   	{
   		cout<<"Lesser points selected than expected.. Terminating";
   		return -1;
   	}
-  	if(userparameter.size()>4)					       
+  	if(userparameter.size()>4)					   
   	{
   		cout<<"More points selected than expected.. Taking first four points into account";
   	}
@@ -145,12 +137,10 @@ int main(int argc, char* argv[])
 	finalparameter.push_back(Point2f(800,830));
 	finalparameter.push_back(Point2f(800,52));
 	
-	Mat back_homo,back_final;					// intermediate homographic image,final cropped image
+	Mat back_homo;					// intermediate homographic image,final cropped image
 	Mat matrix = getPerspectiveTransform(userparameter,finalparameter);
 	warpPerspective(background,back_homo,matrix,background.size()); 
-	Rect crop_region(472,52,328,778);					
-	back_final = back_homo(crop_region);
-	destroyAllWindows();		    
+	destroyAllWindows();		
 
 	auto start = high_resolution_clock::now();
 
@@ -160,13 +150,13 @@ int main(int argc, char* argv[])
 	{
 		n[i].index = i;
 		n[i].video = video;
-		n[i].back_final = back_final;
+		n[i].back_homo = back_homo;
 		n[i].matrix = matrix;
 		pthread_create(&(ptid[i]), NULL, &consecutive, &(n[i]));
 	}
 	n[total-1].index = total-1;
 	n[total-1].video = video;
-	n[total-1].back_final = back_final;
+	n[total-1].back_homo = back_homo;
 	n[total-1].matrix = matrix;
 	consecutive(&(n[total-1]));
 	for(int i=0;i<total-1;i++)
@@ -179,15 +169,15 @@ int main(int argc, char* argv[])
 	int framenum = 0;
 	while(framenum<325)
 	{
-		cout<<((float)framenum)/15<<fixed<<','<<queue_density[framenum]/(1.25e6)<<','<<dynamic_density[framenum]/(2.5e5)<<endl;
+		//cout<<float(framenum/15)<<fixed<<','<<queue_density[framenum]/(1.25e6)<<','<<dynamic_density[framenum]/(2.5e5)<<endl;
 		framenum++;
 	}
 	
 	
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
-	cout << "Time taken by function in seconds:\n"
-         << duration.count()/(1e6)<<endl;
+	cout << "\nTime taken by function: "
+ << duration.count()/(1e6) << " seconds" << endl;
 	//myfile.close();	
 	return 0;
 }
