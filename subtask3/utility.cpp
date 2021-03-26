@@ -96,7 +96,7 @@ int main(int argc,char* argv[])
 
 	while(it<index)
 	{
-		abs_error_queue = abs_error_queue + err_queue[it];
+		abs_error_queue = (abs_error_queue + err_queue[it]);
 		sqr_error_queue = sqr_error_queue + err_queue[it]*err_queue[it];
 		abs_error_dynamic = abs_error_dynamic + err_dynamic[it];
 		sqr_error_dynamic = sqr_error_dynamic + err_dynamic[it]*err_dynamic[it];
@@ -104,7 +104,7 @@ int main(int argc,char* argv[])
 	}
 
 	cout<<"The runtime for reference is "<<reference_time<<endl<<"The runtime for this method is "<<runtime<<endl;
-	cout<<"The utility of queue density using\nAbsolute difference : "<<abs_error_queue<<"\nSquared difference : "<<sqr_error_queue<<endl;
-	cout<<"The utility of dynamic density using\nAbsolute difference : "<<abs_error_dynamic<<"\nSquared difference : "<<sqr_error_dynamic<<endl;
+	cout<<"The utility of queue density using\nAbsolute difference : "<<abs_error_queue/index<<"\nSquared difference : "<<sqrt(sqr_error_queue/(index*index))<<endl;
+	cout<<"The utility of dynamic density using\nAbsolute difference : "<<abs_error_dynamic/index<<"\nSquared difference : "<<(sqrt(sqr_error_dynamic))/index<<endl;
 
 }
