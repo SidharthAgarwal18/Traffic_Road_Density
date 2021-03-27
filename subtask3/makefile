@@ -11,13 +11,13 @@ ut.o: utility.cpp
 run0: 
 	./a0.o ./empty.jpg ./trafficvideo.mp4
 run1: 
-	./a1.o ./empty.jpg ./trafficvideo.mp4 4
+	./a1.o ./empty.jpg ./trafficvideo.mp4 5000
 run2:
 	./a2.o ./empty.jpg ./trafficvideo.mp4 480 240
 run4: 
-	./a4.o ./empty.jpg ./trafficvideo.mp4 4
+	./a4.o ./empty.jpg ./trafficvideo.mp4 3
 runu:
-	./ut.o ./out1.txt
+	./ut.o ./out4.txt
 .PHONY: clean
 clean:
 	rm -f *.o

@@ -43,6 +43,7 @@ int main( int argc,char** argv)
   		cout<<"More points selected than expected.. Taking first four points into account";
   	}
   	userparameter.resize(4);
+  	cout<<userparameter;
   	
 	vector<Point2f> finalparameter;					//vector for destination coordinates
 	finalparameter.push_back(Point2f(472,52));

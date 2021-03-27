@@ -55,20 +55,14 @@ void* consecutive(void* arg)
 	    done = cap.read(frame);
 	    if(!done) break;					//video is finished.
 	    
-	    if(framenum%total==index-1)
-	    {
-	    	warpPerspective(frame,frame_homo,matrix,frame.size());
-	    	frame_final = frame_homo(crop_region);			//frame after wrapping and cropping
-	    	previous_frame = frame_final;
-	    }
-	    else if(framenum%total==index)
+	    if(framenum%total==index)
 	    {	
 	    	warpPerspective(frame,frame_homo,matrix,frame.size());
 	    	frame_final = frame_homo(crop_region);			//frame after wrapping and cropping
 	    	    	
 	    	Mat img = abs(frame_final - back_final) > 50;		//Subtract background and consider part with diff grater than 50
 	    	Mat dynamic_img = abs(frame_final - previous_frame)>50;//Subtract previous frame and consider part with diff greaer than 50
-	    	//previous_frame = frame_final;					//Set current frame to be previous for next frame
+	    	previous_frame = frame_final;					//Set current frame to be previous for next frame
 	    	
 	    	pixels = sum(img);
 	    	dynamic_pixels = sum(dynamic_img);
@@ -135,7 +129,7 @@ int main(int argc, char* argv[])
 
 	pthread_t ptid[total-1];
 	forparallel n[total];
-	for(int i=0;i<total-1;i++)
+	for(int i=0;i<total;i++)
 	{
 		n[i].index = i;
 		n[i].video = video;
@@ -143,20 +137,17 @@ int main(int argc, char* argv[])
 		n[i].matrix = matrix;
 		pthread_create(&(ptid[i]), NULL, &consecutive, &(n[i]));
 	}
-	n[total-1].index = total-1;
-	n[total-1].video = video;
-	n[total-1].back_final = back_final;
-	n[total-1].matrix = matrix;
-	consecutive(&(n[total-1]));
-	for(int i=0;i<total-1;i++)
+		
+	for(int i=0;i<total;i++)
 	{
 		pthread_join((ptid[i]),NULL);
 	}
 	
+	freopen("out4.txt","w",stdout);
 
 	cout<<"Sec,Queue,Dynamic"<<endl;
 	int framenum = 0;
-	while(framenum<325)
+	while(framenum<5737)
 	{
 		cout<<((float)framenum)/15<<fixed<<','<<queue_density[framenum]/(1.25e6)<<','<<dynamic_density[framenum]/(2.5e5)<<endl;
 		framenum++;
