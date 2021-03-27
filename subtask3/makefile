@@ -15,7 +15,7 @@ run1:
 run2:
 	./a2.o ./empty.jpg ./trafficvideo.mp4 480 240
 run4: 
-	./a4.o ./empty.jpg ./trafficvideo.mp4 3
+	./a4.o ./empty.jpg ./trafficvideo.mp4 8
 runu:
 	./ut.o ./out4.txt
 .PHONY: clean
