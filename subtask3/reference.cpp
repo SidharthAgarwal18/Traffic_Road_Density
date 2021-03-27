@@ -10,13 +10,6 @@ using namespace cv;
 using namespace std;
 using namespace std::chrono;
 
-vector<Point2f> userparameter;							// To store the points clicked by user
-void mousefunction(int event,int x,int y,int flags,void* parameters)		// To record every left click
-{
-	if(event == EVENT_LBUTTONDOWN)	
-		userparameter.push_back(Point2f(x,y));
-}
-
 int main(int argc, char* argv[])
 {
 	if(argc != 3)
@@ -34,23 +27,12 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 	
-	imshow("Original Frame",background);
-	int parameter = 50;							// max number of mouse calls
-  	setMouseCallback("Original Frame",mousefunction,&parameter);
-  	waitKey(0);								// press any key to proceed
-  	destroyAllWindows();							// destroyes all opened windows    
-  	
-  	if(userparameter.size()<4)						// ensures 4 points are considered
-  	{
-  		cout<<"Lesser points selected than expected.. Terminating";
-  		return -1;
-  	}
-  	if(userparameter.size()>4)					       
-  	{
-  		cout<<"More points selected than expected.. Taking first four points into account";
-  	}
-  	userparameter.resize(4);
-  	
+	vector<Point2f> userparameter;							// To store the points clicked by user
+	userparameter.push_back(Point2f(1000,218));
+	userparameter.push_back(Point2f(461,897));
+	userparameter.push_back(Point2f(1521,924));
+	userparameter.push_back(Point2f(1278,205));
+
 	vector<Point2f> finalparameter;					//vector for destination coordinates
 	finalparameter.push_back(Point2f(472,52));
 	finalparameter.push_back(Point2f(472,830));
@@ -117,7 +99,6 @@ int main(int argc, char* argv[])
 			cout << "Esc key is pressed by user. Stopping the video" << endl;
 		   	break;
 		}
-		if(framenum==325) break;
 		
 		framenum = framenum+1;
 	}

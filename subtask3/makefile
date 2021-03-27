@@ -5,7 +5,7 @@ a1.o: method1.cpp
 a2.o: method2.cpp
 	g++ method2.cpp -o a2.o -std=c++11 `pkg-config --cflags --libs opencv`
 a4.o: method4.cpp
-	g++ method4.cpp -o a4.o -std=c++11 -lpthread `pkg-config --cflags --libs opencv`
+	g++ method4.cpp -o a4.o -std=c++11 -pthread `pkg-config --cflags --libs opencv`
 ut.o: utility.cpp
 	g++ utility.cpp -o ut.o
 run0: 
@@ -15,7 +15,7 @@ run1:
 run2:
 	./a2.o ./empty.jpg ./trafficvideo.mp4 480 240
 run4: 
-	./a4.o ./empty.jpg ./trafficvideo.mp4
+	./a4.o ./empty.jpg ./trafficvideo.mp4 4
 runu:
 	./ut.o ./out1.txt
 .PHONY: clean

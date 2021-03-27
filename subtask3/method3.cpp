@@ -12,12 +12,6 @@ using namespace cv;
 using namespace std;
 using namespace std::chrono;
 
-vector<Point2f> userparameter;							// To store the points clicked by user
-void mousefunction(int event,int x,int y,int flags,void* parameters)		// To record every left click
-{
-	if(event == EVENT_LBUTTONDOWN)	
-		userparameter.push_back(Point2f(x,y));
-}
 int total;
 float queue_density[6000][17];
 float dynamic_density[6000][17];
@@ -78,7 +72,7 @@ void* consecutive(void* arg)
 		//imshow("video_queue", img);
 		//imshow("video_dynamic", dynamic_img);
 
-		if (waitKey(10) == 27 || esc == 1 || framenum==325)		//for testing purposes break at 100 seconds
+		if (waitKey(10) == 27 || esc == 1)		//for testing purposes break at 100 seconds
 		{
 			cout << "Esc key is pressed by user. Stopping the video"<<framenum << endl;
 		   	esc = 1;
@@ -114,22 +108,11 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 	
-	imshow("Original Frame",background);
-	int parameter = 50;							// max number of mouse calls
-  	setMouseCallback("Original Frame",mousefunction,&parameter);
-  	waitKey(0);								// press any key to proceed
-  	destroyAllWindows();							// destroyes all opened windows
-  	
-  	if(userparameter.size()<4)						// ensures 4 points are considered
-  	{
-  		cout<<"Lesser points selected than expected.. Terminating";
-  		return -1;
-  	}
-  	if(userparameter.size()>4)					   
-  	{
-  		cout<<"More points selected than expected.. Taking first four points into account";
-  	}
-  	userparameter.resize(4);
+	vector<Point2f> userparameter;							// To store the points clicked by user
+	userparameter.push_back(Point2f(1000,218));
+	userparameter.push_back(Point2f(461,897));
+	userparameter.push_back(Point2f(1521,924));
+	userparameter.push_back(Point2f(1278,205));
   	
 	vector<Point2f> finalparameter;					//vector for destination coordinates
 	finalparameter.push_back(Point2f(472,52));
@@ -169,7 +152,7 @@ int main(int argc, char* argv[])
 	int framenum = 0;
 	while(framenum<325)
 	{
-		//cout<<float(framenum/15)<<fixed<<','<<queue_density[framenum]/(1.25e6)<<','<<dynamic_density[framenum]/(2.5e5)<<endl;
+		cout<<((float)framenum)/15<<fixed<<','<<queue_density[framenum]/(1.25e6)<<','<<dynamic_density[framenum]/(2.5e5)<<endl;
 		framenum++;
 	}
 	
