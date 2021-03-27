@@ -17,7 +17,7 @@ run1:
 run2:
 	./a2.o ./empty.jpg ./trafficvideo.mp4 480 240
 run3: 
-	./a3.o ./empty.jpg ./trafficvideo.mp4 2
+	./a3.o ./empty.jpg ./trafficvideo.mp4 4
 run4: 
 	./a4.o ./empty.jpg ./trafficvideo.mp4 2
 runu:
