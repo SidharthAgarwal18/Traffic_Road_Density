@@ -60,7 +60,7 @@ void* consecutive(void* arg)
 			
 		Mat img = abs(frame_final - back_final) > 50;		//Subtract background and consider part with diff grater than 50
 		Mat dynamic_img = abs(frame_final - previous_frame)>50;//Subtract previous frame and consider part with diff greaer than 50
-		//previous_frame = frame_final;					//Set current frame to be previous for next frame
+		previous_frame = frame_final;					//Set current frame to be previous for next frame
 		
 		pixels = sum(img);
 		dynamic_pixels = sum(dynamic_img);
@@ -68,7 +68,7 @@ void* consecutive(void* arg)
 		queue_density[framenum][index] = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
 		dynamic_density[framenum][index] = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
 		
-			//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  					
+		//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  					
 		//imshow("video_queue", img);
 		//imshow("video_dynamic", dynamic_img);
 
@@ -127,9 +127,9 @@ int main(int argc, char* argv[])
 
 	auto start = high_resolution_clock::now();
 
-	pthread_t ptid[total-1];
+	pthread_t ptid[total];
 	forparallel n[total];
-	for(int i=0;i<total-1;i++)
+	for(int i=0;i<total;i++)
 	{
 		n[i].index = i;
 		n[i].video = video;
@@ -137,30 +137,35 @@ int main(int argc, char* argv[])
 		n[i].matrix = matrix;
 		pthread_create(&(ptid[i]), NULL, &consecutive, &(n[i]));
 	}
-	n[total-1].index = total-1;
-	n[total-1].video = video;
-	n[total-1].back_homo = back_homo;
-	n[total-1].matrix = matrix;
-	consecutive(&(n[total-1]));
-	for(int i=0;i<total-1;i++)
+	
+	for(int i=0;i<total;i++)
 	{
 		pthread_join((ptid[i]),NULL);
 	}
 	
-
+	freopen("out3.txt","w",stdout);
 	cout<<"Sec,Queue,Dynamic"<<endl;
 	int framenum = 0;
-	while(framenum<325)
+	int queue,dynamic,i;
+
+	while(framenum<5737)
 	{
-		cout<<((float)framenum)/15<<fixed<<','<<queue_density[framenum]/(1.25e6)<<','<<dynamic_density[framenum]/(2.5e5)<<endl;
+		for(i=0;i<total;i++) 
+		{
+			queue = queue + queue_density[framenum][i];
+			dynamic = dynamic + dynamic_density[framenum][i];
+		}
+		cout<<((float)framenum)/15<<fixed<<','<<queue/(1.25e6)<<','<<dynamic/(2.5e5)<<endl;
+		queue = 0;
+		dynamic = 0;
 		framenum++;
 	}
 	
 	
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
-	cout << "\nTime taken by function: "
- << duration.count()/(1e6) << " seconds" << endl;
+	cout << "Time taken by function in seconds:\n "
+ << duration.count()/(1e6)<< endl;
 	//myfile.close();	
 	return 0;
 }
