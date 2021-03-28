@@ -19,38 +19,46 @@ int main(int argc, char* argv[])
 	}
 	string empty(argv[1]);
 	string video(argv[2]);
-	int width = atoi(argv[3]);
-	int height = atoi(argv[4]);
-	Mat background;		
-	background = imread(empty);
-	if(!background.data)
+	float x_len = atoi(argv[3]);
+	float y_len = atoi(argv[4]);
+
+	Mat background_first,background;		
+	background_first = imread(empty);
+
+	if(!background_first.data)
 	{
 		cout<<"Image not found, you can download from https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/empty.jpg or simply name path variable in code \n";
 		return -1;
 	}
 	
+	resize(background_first,background,Size(x_len,y_len));
+	float ratio1 = x_len/1920;
+	float ratio2 = y_len/1080;
+
 	vector<Point2f> userparameter;							// To store the points clicked by user
-	userparameter.push_back(Point2f(1000,218));
-	userparameter.push_back(Point2f(461,897));
-	userparameter.push_back(Point2f(1521,924));
-	userparameter.push_back(Point2f(1278,205));
+	userparameter.push_back(Point2f(1000*ratio1,218*ratio2));
+	userparameter.push_back(Point2f(461*ratio1,897*ratio2));
+	userparameter.push_back(Point2f(1521*ratio1,924*ratio2));
+	userparameter.push_back(Point2f(1278*ratio1,205*ratio2));
   	
 	vector<Point2f> finalparameter;					//vector for destination coordinates
-	finalparameter.push_back(Point2f(472,52));
-	finalparameter.push_back(Point2f(472,830));
-	finalparameter.push_back(Point2f(800,830));
-	finalparameter.push_back(Point2f(800,52));
+	finalparameter.push_back(Point2f(472*ratio1,52*ratio2));
+	finalparameter.push_back(Point2f(472*ratio1,830*ratio2));
+	finalparameter.push_back(Point2f(800*ratio1,830*ratio2));
+	finalparameter.push_back(Point2f(800*ratio1,52*ratio2));
 	
 	Mat back_homo,back_final;					// intermediate homographic image,final cropped image
 	Mat matrix = getPerspectiveTransform(userparameter,finalparameter);
 	warpPerspective(background,back_homo,matrix,background.size()); 
-	Rect crop_region(472,52,328,778);					
+	Rect crop_region(472*ratio1,52*ratio2,328*ratio1,778*ratio2);	
+
+	//imshow("second",back_homo);
 	back_final = back_homo(crop_region);
+	//imshow("third",back_final);
+	//waitKey(0);
 	destroyAllWindows();		    
 	    
 	VideoCapture cap(video);
-	cap.set(3,width);
-	cap.set(4,height);
 
 	if (cap.isOpened() == false)  
 	 {
@@ -77,34 +85,37 @@ int main(int argc, char* argv[])
 
 	while(done)
 	{
-		Mat frame,frame_homo,frame_final;
-	    	done = cap.read(frame);
-	    	if(!done) break;					//video is finished.
+		Mat frame_first,frame,frame_homo,frame_final;
+	    done = cap.read(frame_first);
+	    if(!done) break;					//video is finished.
+	    
+	    resize(frame_first,frame,Size(x_len,y_len));
+	    //imshow("frame",frame);
+	    warpPerspective(frame,frame_homo,matrix,frame.size());
+	    frame_final = frame_homo(crop_region);			//frame after wrapping and cropping
+	        	
+	    Mat img = abs(frame_final - back_final) > 50;		//Subtract background and consider part with diff grater than 50
+	    Mat dynamic_img = abs(frame_final - previous_frame)>50;//Subtract previous frame and consider part with diff greaer than 50
+	    previous_frame = frame_final;					//Set current frame to be previous for next frame
+	    
+	    pixels = sum(img);
+	    dynamic_pixels = sum(dynamic_img);
 	    	
-	    	warpPerspective(frame,frame_homo,matrix,frame.size());
-	    	frame_final = frame_homo(crop_region);			//frame after wrapping and cropping
-	    	    	
-	    	Mat img = abs(frame_final - back_final) > 50;		//Subtract background and consider part with diff grater than 50
-	    	Mat dynamic_img = abs(frame_final - previous_frame)>50;//Subtract previous frame and consider part with diff greaer than 50
-	    	previous_frame = frame_final;					//Set current frame to be previous for next frame
-	    	
-	    	pixels = sum(img);
-	    	dynamic_pixels = sum(dynamic_img);
-	    	
-	    	queue_density = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
-	    	dynamic_density = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
-	    	//dynamic_density = 0.2*dynamic_density + 0.8*previous_dynamic;
-			previous_dynamic = dynamic_density;
+	    queue_density = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
+	    dynamic_density = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
+	    //dynamic_density = 0.2*dynamic_density + 0.8*previous_dynamic;
+		previous_dynamic = dynamic_density;
 
-			cout<<framenum/15<<fixed<<','<<queue_density/(1.25e6)<<','<<dynamic_density/(2.5e5)<<endl;	
-	    	//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  		    		    	
-	    	imshow("video_queue", img);
-	    	imshow("video_dynamic", dynamic_img);
+		cout<<framenum/15<<fixed<<','<<queue_density/(1.25e6)<<','<<dynamic_density/(2.5e5)<<endl;	
+	   	//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  		    		    	
+	   	//imshow("video_queue", img);
+	   	//imshow("video_dynamic", dynamic_img);
 		if (waitKey(10) == 27)		//for testing purposes break at 100 seconds
 		{
 			cout << "Esc key is pressed by user. Stopping the video" << endl;
 		   	break;
 		}
+		framenum++;
 	}
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
