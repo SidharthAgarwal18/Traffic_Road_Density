@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
 	    	//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  		    		    	
 	    	//imshow("video_queue", img);
 	    	//imshow("video_dynamic", dynamic_img);
-		if (waitKey(10) == 27)		//for testing purposes break at 100 seconds
+		if (waitKey(10) == 27)
 		{
 			cout << "Esc key is pressed by user. Stopping the video" << endl;
 		   	break;
