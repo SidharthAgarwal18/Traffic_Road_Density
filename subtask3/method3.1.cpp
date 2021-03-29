@@ -16,13 +16,13 @@ int total;
 float queue_density[6000][17];
 float dynamic_density[6000][17];
 int esc = 0;
-
+vector<Point2f> userparameter;							// To store the points clicked by user
 class forparallel
 {
 public:
 	string video;
 	int index;
-	Mat back_final;
+	Mat background;
 	Mat matrix;
 };
 
@@ -31,8 +31,54 @@ void* consecutive(void* arg)
 	forparallel n = *((forparallel*)arg);
 	int index = n.index;
 	String video = n.video;
-	Mat back_final = n.back_final;
+	Mat back_final;
+	Mat background = n.background;
 	Mat matrix = n.matrix;
+	Mat back_homo;
+	Point2f lu = userparameter[0];
+	Point2f ld = userparameter[1];
+	Point2f rd = userparameter[2];
+	Point2f ru = userparameter[3];
+	Point2f left_new,right_new;
+	vector<Point2f> new_user;
+	vector<Point2f> finalparameter;
+
+	new_user.push_back((ld*index+(total-index)*lu)/total);
+	new_user.push_back((ld*(index+1)+(total-index-1)*lu)/total);
+	new_user.push_back((rd*(index+1)+(total-index-1)*ru)/total);
+	new_user.push_back((rd*(index)+(total-index)*ru)/total);
+	finalparameter.push_back(Point2f(472,52+(index*(778/total))));
+	finalparameter.push_back(Point2f(472,52+((index+1)*(778/total))));
+	finalparameter.push_back(Point2f(800,52+((index+1)*(778/total))));
+	finalparameter.push_back(Point2f(800,52+(index*(778/total))));
+
+	float zero_x,zero_y,zero_width,zero_height;
+	zero_x = min(userparameter[0].x,userparameter[1].x);
+	zero_y = min(userparameter[0].y,userparameter[3].y);
+
+	zero_x = min(zero_x,finalparameter[0].x);
+	zero_y = min(zero_y,finalparameter[0].y);
+
+	userparameter[0] = userparameter[0] - Point2f(zero_x,zero_y);
+	userparameter[1] = userparameter[1] - Point2f(zero_x,zero_y);
+	userparameter[2] = userparameter[2] - Point2f(zero_x,zero_y);
+	userparameter[3] = userparameter[3] - Point2f(zero_x,zero_y);
+	finalparameter[0] = finalparameter[0] - Point2f(zero_x,zero_y);
+	finalparameter[1] = finalparameter[1] - Point2f(zero_x,zero_y);
+	finalparameter[2] = finalparameter[2] - Point2f(zero_x,zero_y);
+	finalparameter[3] = finalparameter[3] - Point2f(zero_x,zero_y);
+
+	zero_width = max(finalparameter[3].x,max(userparameter[3].x,userparameter[2].x));
+	zero_height = max(finalparameter[2].y,max(userparameter[2].y,userparameter[1].y));
+
+	Rect crop_initial(zero_x,zero_y,zero_width,zero_height);
+	background = background(crop_initial);
+
+	matrix = getPerspectiveTransform(new_user,finalparameter);
+	warpPerspective(background,back_homo,matrix,background.size()); 
+	Rect crop_region(472,52+(index*(778/total)),328,778/total);
+	back_final = back_homo(crop_region);
+
 	//sleep(index);
 	VideoCapture cap(video);
 	if (cap.isOpened() == false)  
@@ -46,17 +92,16 @@ void* consecutive(void* arg)
 	Scalar pixels;						//sum of pixels in subtracted image for queue_density
 	Scalar dynamic_pixels;					// sum of pixels in subtracted image for dynamic_density
 	Mat previous_frame = back_final;			//stores img of previous frame.
-		
 	while(done)
 	{
 		Mat frame,frame_homo,frame_final;
 		done = cap.read(frame);
 		if(!done) break;					//video is finished.
-	
+		frame = frame(crop_initial);
 		warpPerspective(frame,frame_homo,matrix,frame.size());
-		Rect crop_region(472,52+(index*(778/total)),328,778/total);
+		
 		frame_final = frame_homo(crop_region);
-
+		if(index == total-1) imshow("a",frame_final);
 		Mat img = abs(frame_final - back_final) > 50;		//Subtract background and consider part with diff grater than 50
 		Mat dynamic_img = abs(frame_final - previous_frame)>50;//Subtract previous frame and consider part with diff greaer than 50
 		previous_frame = frame_final;					//Set current frame to be previous for next frame
@@ -70,7 +115,10 @@ void* consecutive(void* arg)
 		//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  					
 		//imshow("video_queue", img);
 		//imshow("video_dynamic", dynamic_img);
-
+		if(framenum >=325)
+		{
+			return NULL;
+		}
 		if (waitKey(10) == 27 || esc == 1)		//for testing purposes break at 100 seconds
 		{
 			cout << "Esc key is pressed by user. Stopping the video"<<framenum << endl;
@@ -107,7 +155,6 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 	
-	vector<Point2f> userparameter;							// To store the points clicked by user
 	userparameter.push_back(Point2f(1000,218));
 	userparameter.push_back(Point2f(461,897));
 	userparameter.push_back(Point2f(1521,924));
@@ -121,53 +168,25 @@ int main(int argc, char* argv[])
 	pthread_t ptid[total];
 	forparallel n[total];
 
-	Point2f left = userparameter[0];
-	Point2f right = userparameter[3];
-	Point2f left_new,right_new;
-
 	int ratio = total - 1;
-	for(int i=0;i<total;i++)
+	for(int i=0;i<total-1;i++)
 	{
-		Mat back_homo;
-		vector<Point2f> new_user;
-		vector<Point2f> finalparameter;
-
 		n[i].index = i;
 		n[i].video = video;
-
-		left_new = (left*ratio + userparameter[1])/(ratio+1);
-		right_new = (right*ratio + userparameter[2])/(ratio+1);
-
-		new_user.push_back(left);
-		new_user.push_back(left_new);
-		new_user.push_back(right_new);
-		new_user.push_back(right);
-
-		finalparameter.push_back(Point2f(472,52+(i*(778/total))));
-		finalparameter.push_back(Point2f(472,52+((i+1)*(778/total))));
-		finalparameter.push_back(Point2f(800,52+((i+1)*(778/total))));
-		finalparameter.push_back(Point2f(800,52+(i*(778/total))));
-
-		left = left_new;
-		right = right_new;
-		ratio--;
-
-		matrix[i] = getPerspectiveTransform(new_user,finalparameter);
-		warpPerspective(background,back_homo,matrix[i],background.size()); 
-		Rect crop_region(472,52+(i*(778/total)),328,778/total);
-		back_final[i] = back_homo(crop_region);
-
-		n[i].back_final = back_final[i];
-		n[i].matrix = matrix[i];
+		n[i].background = background;
 		pthread_create(&(ptid[i]), NULL, &consecutive, &(n[i]));
 	}
-	
-	for(int i=0;i<total;i++)
+	//int i = total - 1;
+	n[total - 1].index = total - 1;
+	n[total - 1].video = video;
+	n[total - 1].background = background;
+	consecutive(&(n[total-1]));
+	for(int i=0;i<total-1;i++)
 	{
 		pthread_join((ptid[i]),NULL);
 	}
 	
-	freopen("out3.txt","w",stdout);
+	//freopen("out3.txt","w",stdout);
 	cout<<"Sec,Queue,Dynamic"<<endl;
 	int framenum = 0;
 	int queue,dynamic,i;
