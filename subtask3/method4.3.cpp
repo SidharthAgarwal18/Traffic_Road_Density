@@ -33,6 +33,7 @@ void* consecutive(void* arg)
 	int index = n.index;
 	Mat back_final = n.back_final;
 	Mat matrix = n.matrix;
+	int framenum2;
 	
 	Rect crop_region(472,52,328,778);
 
@@ -49,7 +50,9 @@ void* consecutive(void* arg)
 	    {	
 	    	Mat frame,frame_homo,frame_final;
 	    	done = cap.read(frame);
+	    	framenum2 = framenum;
 	    	framenum++;
+
 	    	warpPerspective(frame,frame_homo,matrix,frame.size());
 	    	frame_final = frame_homo(crop_region);			//frame after wrapping and cropping
 	    	    	
@@ -60,8 +63,8 @@ void* consecutive(void* arg)
 	    	pixels = sum(img);
 	    	dynamic_pixels = sum(dynamic_img);
 	    	
-	    	queue_density[framenum] = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
-	    	dynamic_density[framenum] = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
+	    	queue_density[framenum2] = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
+	    	dynamic_density[framenum2] = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
 	    	
 	    	//if(index == total-1) cout << "a";
 			//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  		    		    	
@@ -141,7 +144,7 @@ int main(int argc, char* argv[])
 		pthread_join((ptid[i]),NULL);
 	}
 	
-	//freopen("out4.txt","w",stdout);
+	freopen("out4.txt","w",stdout);
 
 	cout<<"Sec,Queue,Dynamic"<<endl;
 	int framenum = 0;
