@@ -73,10 +73,12 @@ void* consecutive(void* arg)
 
 	Rect crop_initial(zero_x,zero_y,zero_width,zero_height);
 	Mat background = background_i(crop_initial);
+	if(index == total -1) imshow("a",background);
+	cout << background.size();
 
 	matrix = getPerspectiveTransform(new_user,finalparameter);
 	warpPerspective(background,back_homo,matrix,background.size()); 
-	Rect crop_region(472,52+(index*(778/total)),328,778/total);
+	Rect crop_region(finalparameter[0].x,finalparameter[0].y,finalparameter[3].x - finalparameter[0].x,finalparameter[1].y - finalparameter[0].y);
 	back_final = back_homo(crop_region);
 
 	//sleep(index);
@@ -94,10 +96,10 @@ void* consecutive(void* arg)
 	Mat previous_frame = back_final;			//stores img of previous frame.
 	while(done)
 	{
-		Mat frame,frame_homo,frame_final;
-		done = cap.read(frame);
+		Mat frame_i,frame,frame_homo,frame_final;
+		done = cap.read(frame_i);
 		if(!done) break;					//video is finished.
-		frame = frame(crop_initial);
+		frame = frame_i(crop_initial);
 		warpPerspective(frame,frame_homo,matrix,frame.size());
 		
 		frame_final = frame_homo(crop_region);
@@ -115,10 +117,6 @@ void* consecutive(void* arg)
 		//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  					
 		//imshow("video_queue", img);
 		//imshow("video_dynamic", dynamic_img);
-		if(framenum >=325)
-		{
-			return NULL;
-		}
 		if (waitKey(10) == 27 || esc == 1)		//for testing purposes break at 100 seconds
 		{
 			cout << "Esc key is pressed by user. Stopping the video"<<framenum << endl;
@@ -186,7 +184,7 @@ int main(int argc, char* argv[])
 		pthread_join((ptid[i]),NULL);
 	}
 	
-	//freopen("out3.txt","w",stdout);
+	freopen("out3.txt","w",stdout);
 	cout<<"Sec,Queue,Dynamic"<<endl;
 	int framenum = 0;
 	int queue,dynamic,i;
