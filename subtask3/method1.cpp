@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 {
 	if(argc != 4)
 	{
-		cout<<"Expected 2 variables 1st one path of empty image and second the path of video and 3rd the parameter. Empty image submitted was taken from 5:45 from given video";
+		cout<<"Expected 3 variables 1st one path of empty image and second the path of video and 3rd the parameter. Empty image submitted was taken from 5:45 from given video";
 		return -1;
 	}
 	string empty(argv[1]);
@@ -24,11 +24,11 @@ int main(int argc, char* argv[])
 	background = imread(empty);
 	if(!background.data)
 	{
-		cout<<"Image not found, you can download from https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/empty.jpg or simply name path variable in code \n";
+		cout<<"Image not found, you can download from https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/empty.jpg or simply enter path in call \n";
 		return -1;
 	}
 	
-	vector<Point2f> userparameter;							// To store the points clicked by user
+	vector<Point2f> userparameter;							// To store the points clicked by user //Assumed fixed for this part of assignment
 	userparameter.push_back(Point2f(1000,218));
 	userparameter.push_back(Point2f(461,897));
 	userparameter.push_back(Point2f(1521,924));
@@ -88,13 +88,13 @@ int main(int argc, char* argv[])
 			pixels = sum(img);
 			dynamic_pixels = sum(dynamic_img);
 		
-			queue_density = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
+			queue_density = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of pixels that are different in current frame and backgroung image in required region
 			dynamic_density = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
 		}
 		//imshow("video_queue", img);
 		//imshow("video_dynamic", dynamic_img);
 		cout<<((float)framenum)/15<<fixed<<','<<queue_density/(1.25e6)<<','<<dynamic_density/(2.5e5)<<endl;
-		if (waitKey(10) == 27)		//for testing purposes break at 100 seconds
+		if (waitKey(10) == 27)	
 		{
 			cout << "Esc key is pressed by user. Stopping the video" << endl;
 		   	break;
