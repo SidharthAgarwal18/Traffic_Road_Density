@@ -32,7 +32,7 @@ void* consecutive(void* arg)
 	int index = n.index;
 	String video = n.video;
 	Mat back_final;
-	Mat background = n.background;
+	Mat background_i = n.background;
 	Mat matrix = n.matrix;
 	Mat back_homo;
 	Point2f lu = userparameter[0];
@@ -53,26 +53,26 @@ void* consecutive(void* arg)
 	finalparameter.push_back(Point2f(800,52+(index*(778/total))));
 
 	float zero_x,zero_y,zero_width,zero_height;
-	zero_x = min(userparameter[0].x,userparameter[1].x);
-	zero_y = min(userparameter[0].y,userparameter[3].y);
+	zero_x = min(new_user[0].x,new_user[1].x);
+	zero_y = min(new_user[0].y,new_user[3].y);
 
 	zero_x = min(zero_x,finalparameter[0].x);
 	zero_y = min(zero_y,finalparameter[0].y);
 
-	userparameter[0] = userparameter[0] - Point2f(zero_x,zero_y);
-	userparameter[1] = userparameter[1] - Point2f(zero_x,zero_y);
-	userparameter[2] = userparameter[2] - Point2f(zero_x,zero_y);
-	userparameter[3] = userparameter[3] - Point2f(zero_x,zero_y);
+	new_user[0] = new_user[0] - Point2f(zero_x,zero_y);
+	new_user[1] = new_user[1] - Point2f(zero_x,zero_y);
+	new_user[2] = new_user[2] - Point2f(zero_x,zero_y);
+	new_user[3] = new_user[3] - Point2f(zero_x,zero_y);
 	finalparameter[0] = finalparameter[0] - Point2f(zero_x,zero_y);
 	finalparameter[1] = finalparameter[1] - Point2f(zero_x,zero_y);
 	finalparameter[2] = finalparameter[2] - Point2f(zero_x,zero_y);
 	finalparameter[3] = finalparameter[3] - Point2f(zero_x,zero_y);
 
-	zero_width = max(finalparameter[3].x,max(userparameter[3].x,userparameter[2].x));
-	zero_height = max(finalparameter[2].y,max(userparameter[2].y,userparameter[1].y));
+	zero_width = max(finalparameter[3].x,max(new_user[3].x,new_user[2].x));
+	zero_height = max(finalparameter[2].y,max(new_user[2].y,new_user[1].y));
 
 	Rect crop_initial(zero_x,zero_y,zero_width,zero_height);
-	background = background(crop_initial);
+	Mat background = background_i(crop_initial);
 
 	matrix = getPerspectiveTransform(new_user,finalparameter);
 	warpPerspective(background,back_homo,matrix,background.size()); 
