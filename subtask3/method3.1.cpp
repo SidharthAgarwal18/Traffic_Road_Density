@@ -16,6 +16,8 @@ int total;
 float queue_density[6000][17];
 float dynamic_density[6000][17];
 int esc = 0;
+int a[17] = {0};
+Mat frame_i;
 vector<Point2f> userparameter;							// To store the points clicked by user
 class forparallel
 {
@@ -82,12 +84,6 @@ void* consecutive(void* arg)
 	back_final = back_homo(crop_region);
 
 	//sleep(index);
-	VideoCapture cap(video);
-	if (cap.isOpened() == false)  
-	{
-		cout << "Video file not found, you can download it from https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/trafficvideo.mp4 or simply name path variable in code" << endl;
-		return NULL;
-	}
 	bool done = true;
 	int framenum = 0;					
 		
@@ -96,9 +92,8 @@ void* consecutive(void* arg)
 	Mat previous_frame = back_final;			//stores img of previous frame.
 	while(done)
 	{
-		Mat frame_i,frame,frame_homo,frame_final;
-		done = cap.read(frame_i);
-		if(!done) break;					//video is finished.
+		if(a[index]==0){
+		Mat frame,frame_homo,frame_final;
 		frame = frame_i(crop_initial);
 		warpPerspective(frame,frame_homo,matrix,frame.size());
 		
@@ -113,7 +108,7 @@ void* consecutive(void* arg)
 		
 		queue_density[framenum][index] = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
 		dynamic_density[framenum][index] = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
-		
+		a[index] = 1;
 		//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  					
 		//imshow("video_queue", img);
 		//imshow("video_dynamic", dynamic_img);
@@ -122,9 +117,8 @@ void* consecutive(void* arg)
 			cout << "Esc key is pressed by user. Stopping the video"<<framenum << endl;
 		   	esc = 1;
 		   	return NULL;
-		}
+		}}
 		
-		framenum = framenum+1;
 	}
 	return NULL;
 }
@@ -166,20 +160,38 @@ int main(int argc, char* argv[])
 	pthread_t ptid[total];
 	forparallel n[total];
 
-	int ratio = total - 1;
-	for(int i=0;i<total-1;i++)
+	VideoCapture cap(video);
+	if (cap.isOpened() == false)  
+	{
+		cout << "Video file not found, you can download it from https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/trafficvideo.mp4 or simply name path variable in code" << endl;
+		return -1;
+	}
+	for(int i=0;i<total;i++)
 	{
 		n[i].index = i;
 		n[i].video = video;
 		n[i].background = background;
 		pthread_create(&(ptid[i]), NULL, &consecutive, &(n[i]));
 	}
-	//int i = total - 1;
-	n[total - 1].index = total - 1;
-	n[total - 1].video = video;
-	n[total - 1].background = background;
-	consecutive(&(n[total-1]));
-	for(int i=0;i<total-1;i++)
+	int fnum = 0;
+	while(fnum<5737)
+	{
+		int next = 1;
+		for(int i=0;next && i<total;i++)
+		{
+			if(a[i]==0) next=0;
+		}
+		if(next)
+		{
+			cap.read(frame_i);
+			for(int i=0;i<total;i++)
+			{
+				a[i] = 0;
+			}
+			fnum++;
+		}
+	}
+	for(int i=0;i<total;i++)
 	{
 		pthread_join((ptid[i]),NULL);
 	}
