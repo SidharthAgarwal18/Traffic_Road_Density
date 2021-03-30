@@ -23,7 +23,7 @@ public:
 	string video;
 	int index;
 	Mat background;
-	Mat matrix;
+	//Mat matrix;
 };
 
 void* consecutive(void* arg)
@@ -31,15 +31,18 @@ void* consecutive(void* arg)
 	forparallel n = *((forparallel*)arg);
 	int index = n.index;
 	String video = n.video;
+
 	Mat back_final;
 	Mat background_i = n.background;
-	Mat matrix = n.matrix;
+	Mat matrix;
 	Mat back_homo;
+
 	Point2f lu = userparameter[0];
 	Point2f ld = userparameter[1];
 	Point2f rd = userparameter[2];
 	Point2f ru = userparameter[3];
 	Point2f left_new,right_new;
+
 	vector<Point2f> new_user;
 	vector<Point2f> finalparameter;
 
@@ -47,6 +50,7 @@ void* consecutive(void* arg)
 	new_user.push_back((ld*(index+1)+(total-index-1)*lu)/total);
 	new_user.push_back((rd*(index+1)+(total-index-1)*ru)/total);
 	new_user.push_back((rd*(index)+(total-index)*ru)/total);
+
 	finalparameter.push_back(Point2f(472,52+(index*(778/total))));
 	finalparameter.push_back(Point2f(472,52+((index+1)*(778/total))));
 	finalparameter.push_back(Point2f(800,52+((index+1)*(778/total))));
@@ -73,13 +77,16 @@ void* consecutive(void* arg)
 
 	Rect crop_initial(zero_x,zero_y,zero_width,zero_height);
 	Mat background = background_i(crop_initial);
-	if(index == total -1) imshow("a",background);
-	cout << background.size();
+	//cout << background.size();
 
 	matrix = getPerspectiveTransform(new_user,finalparameter);
 	warpPerspective(background,back_homo,matrix,background.size()); 
 	Rect crop_region(finalparameter[0].x,finalparameter[0].y,finalparameter[3].x - finalparameter[0].x,finalparameter[1].y - finalparameter[0].y);
 	back_final = back_homo(crop_region);
+	//if(index == 0) imshow("aback",back_final);
+	//if(index == 1) imshow("bback",back_final);
+	//if(index == 2) imshow("cback",back_final);
+	//if(index == 3) imshow("dback",back_final);
 
 	//sleep(index);
 	VideoCapture cap(video);
@@ -98,14 +105,17 @@ void* consecutive(void* arg)
 	{
 		Mat frame_i,frame,frame_homo,frame_final;
 		done = cap.read(frame_i);
-		if(!done) break;					//video is finished.
+		if(!done) return NULL;					//video is finished.
 		frame = frame_i(crop_initial);
 		warpPerspective(frame,frame_homo,matrix,frame.size());
 		
 		frame_final = frame_homo(crop_region);
-		if(index == total-1) imshow("a",frame_final);
 		Mat img = abs(frame_final - back_final) > 50;		//Subtract background and consider part with diff grater than 50
 		Mat dynamic_img = abs(frame_final - previous_frame)>50;//Subtract previous frame and consider part with diff greaer than 50
+		if(index == 0) imshow("a",dynamic_img);
+		if(index == 1) imshow("b",dynamic_img);
+		if(index == 2) imshow("c",dynamic_img);
+		if(index == 3) imshow("d",dynamic_img);
 		previous_frame = frame_final;					//Set current frame to be previous for next frame
 		
 		pixels = sum(img);
@@ -113,11 +123,12 @@ void* consecutive(void* arg)
 		
 		queue_density[framenum][index] = ((pixels[0]+pixels[1]+pixels[2]));		//We assumed queue density will be proportional to number of poxels that are different in the 2 images
 		dynamic_density[framenum][index] = (dynamic_pixels[0]+dynamic_pixels[1]+dynamic_pixels[2]);//And dynamic density will be proportional to the pixels that are changed in the 2 consecutive frames
-		
+		//if(framenum>325 && dynamic_density[framenum][index]==0 && queue_density[framenum][index]==0) return NULL;
+
 		//if(framenum == 5175) imwrite("empty.jpg",frame); 			 For capturing empty frame  					
 		//imshow("video_queue", img);
 		//imshow("video_dynamic", dynamic_img);
-		if (waitKey(10) == 27 || esc == 1)		//for testing purposes break at 100 seconds
+		if (waitKey(10) == 27 || esc==1)		//for testing purposes break at 100 seconds
 		{
 			cout << "Esc key is pressed by user. Stopping the video"<<framenum << endl;
 		   	esc = 1;
@@ -126,6 +137,7 @@ void* consecutive(void* arg)
 		
 		framenum = framenum+1;
 	}
+	cout<<"yo";
 	return NULL;
 }
 
@@ -133,6 +145,9 @@ void* consecutive(void* arg)
 
 int main(int argc, char* argv[])
 {
+	esc = 0;
+	userparameter.clear();
+
 	if(argc != 4)
 	{
 		cout<<"Expected 2 variables 1st one path of empty image and second the path of video, and third for number of threads to split into.. Empty image submitted was taken from 5:45 from given video";
@@ -158,15 +173,15 @@ int main(int argc, char* argv[])
 	userparameter.push_back(Point2f(1521,924));
 	userparameter.push_back(Point2f(1278,205));
   	
-	Mat matrix[total];
-	Mat back_final[total];					// intermediate homographic image,final cropped image
+	//Mat matrix[total];
+	//Mat back_final[total];					// intermediate homographic image,final cropped image
 
 	auto start = high_resolution_clock::now();
 
-	pthread_t ptid[total];
+	pthread_t ptid[total-1];
 	forparallel n[total];
 
-	int ratio = total - 1;
+	//int ratio = total - 1;
 	for(int i=0;i<total-1;i++)
 	{
 		n[i].index = i;
@@ -179,6 +194,7 @@ int main(int argc, char* argv[])
 	n[total - 1].video = video;
 	n[total - 1].background = background;
 	consecutive(&(n[total-1]));
+
 	for(int i=0;i<total-1;i++)
 	{
 		pthread_join((ptid[i]),NULL);
