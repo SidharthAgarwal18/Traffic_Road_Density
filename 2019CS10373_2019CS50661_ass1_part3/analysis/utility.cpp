@@ -35,11 +35,11 @@ void readstring(string data,float err_queue[],float err_dynamic[],int index)
 
 int main(int argc,char* argv[])
 {
-	if(argc!=2)
+	if(argc!=3)
 	{
-		cout<<"Please enter the location of the output file to be compared for utility with respect to reference";
+		cout<<"Please enter the location of the output files to compare for error evaluation";
 	}
-	freopen("out.txt", "r", stdin);
+	freopen(argv[1], "r", stdin);
 	
 	string data;
 	float err_queue[6000] = {0};
@@ -67,7 +67,7 @@ int main(int argc,char* argv[])
 	fclose(stdin);
 
 	index = -1;
-	freopen(argv[1], "r", stdin);
+	freopen(argv[2], "r", stdin);
 	while(getline(cin,data))
 	{
 		if(index!=-1 && (data[0]-'0'>=0 && data[0]-'9'<=0))	
