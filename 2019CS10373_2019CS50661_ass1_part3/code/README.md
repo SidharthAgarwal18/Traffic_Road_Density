@@ -2,7 +2,6 @@
 
 ## Utility-Runtime tradeoff analysis for queue and dynamic density
 * This program explores the various ways of approaching the problem of calculating queue and dynamic density of cars on road and analysis the tradeoff in each such way.
-* In this analysis we have fixed the points selected by user to maintain uniformity across each method.
 * More information can be found on our [course webpage](https://www.cse.iitd.ac.in/~rijurekha/cop290_2021.html) 
 
 ## Instructions
@@ -18,3 +17,4 @@ respectively.
 
 ## Error Handling
 * You are expected to have a `img_name.extn` and `video_name.ext` to run the program.
+* You are expected to maintain the number of arguments in each command line, any command with more or less commands than expected will display the error accordingly.
