@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
 		pthread_join((ptid[i]),NULL);
 	}
 	
-	freopen("out4.txt","w",stdout);
+	//freopen("out4.txt","w",stdout);
 
 	cout<<"Sec,Queue,Dynamic"<<endl;
 	int framenum = 0;

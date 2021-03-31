@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
 	Scalar pixels;						//sum of pixels in subtracted image for queue_density
 	Scalar dynamic_pixels;					// sum of pixels in subtracted image for dynamic_density
 	
-	freopen("out1.txt", "w", stdout);		//To save csv in out.txt
+	//freopen("out1.txt", "w", stdout);		//To save csv in out.txt
 	cout<<"Sec,Queue,Dynamic"<<endl;
 	auto start = high_resolution_clock::now();
 
