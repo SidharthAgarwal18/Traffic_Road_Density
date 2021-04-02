@@ -6,6 +6,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/video.hpp>
 #include<fstream>
+#include<pthread.h>
 using namespace cv;
 using namespace std;
 using namespace std::chrono;
@@ -39,11 +40,7 @@ int main(int argc, char* argv[])
 	finalparameter.push_back(Point2f(800,830));
 	finalparameter.push_back(Point2f(800,52));
 	
-	Mat back_homo,back_final;					// intermediate homographic image,final cropped image
-	Mat matrix = getPerspectiveTransform(userparameter,finalparameter);
-	warpPerspective(background,back_homo,matrix,background.size()); 
-	Rect crop_region(472,52,328,778);					
-	back_final = back_homo(crop_region);
+	
 	destroyAllWindows();		    
 	    
 	VideoCapture cap(video);
@@ -63,18 +60,26 @@ int main(int argc, char* argv[])
 	
 	Scalar pixels;						//sum of pixels in subtracted image for queue_density
 	Scalar dynamic_pixels;					// sum of pixels in subtracted image for dynamic_density
-	Mat previous_frame = back_final;			//stores img of previous frame.
 	
-	freopen("out.txt", "w", stdout);		//To save csv in out.txt
+	
+	//freopen("out.txt", "w", stdout);		//To save csv in out.txt
 	cout<<"Sec,Queue,Dynamic"<<endl;
 	auto start = high_resolution_clock::now();
 
+	Mat back_homo,back_final;					// intermediate homographic image,final cropped image
+	Mat matrix = getPerspectiveTransform(userparameter,finalparameter);
+	warpPerspective(background,back_homo,matrix,background.size()); 
+	Rect crop_region(472,52,328,778);					
+	back_final = back_homo(crop_region);
+	Mat previous_frame = back_final;			//stores img of previous frame.
+	
 	while(done)
 	{
 		Mat frame,frame_homo,frame_final;
 	    	done = cap.read(frame);
 	    	if(!done) break;					//video is finished.
 	    	
+	    	framenum = framenum+1;
 	    	warpPerspective(frame,frame_homo,matrix,frame.size());
 	    	frame_final = frame_homo(crop_region);			//frame after wrapping and cropping
 	    	    	
@@ -100,7 +105,6 @@ int main(int argc, char* argv[])
 		   	break;
 		}
 		
-		framenum = framenum+1;
 	}
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
